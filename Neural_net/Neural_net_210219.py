@@ -20,6 +20,9 @@ import torch
 import seaborn as sns
 import tensorflow as tf
 from tensorflow import keras
+import talos as ta
+# from talos.model.layers import hidden_layers
+# from talos.model.normalizers import lr_normalizer
 
 
 # from plotly import tools
@@ -237,123 +240,57 @@ for t in range(5):
 # Build NN class in TensorFlow
 
 
-def build_model():
-    model = keras.Sequential([
-        keras.layers.Dense(50, activation=tf.nn.relu,
-                           input_shape=[x_train.shape[1]],
-                           use_bias=True,
-                           kernel_initializer='glorot_uniform',
-                           bias_initializer='zeros',
-                           kernel_regularizer=keras.regularizers.l1_l2(l1=0.01, l2=0.01),
-                           bias_regularizer=None),
-        # keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.2),
-        keras.layers.Dense(50, activation=tf.nn.relu,
-                           input_shape=[x_train.shape[1]],
-                           use_bias=True,
-                           kernel_initializer='glorot_uniform',
-                           bias_initializer='zeros',
-                           kernel_regularizer=keras.regularizers.l1_l2(l1=0.01, l2=0.01),
-                           bias_regularizer=None),
-        # keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.2),
-        keras.layers.Dense(1)
-    ])
+def build_model(x_train, y_train, x_val, y_val, params):
 
-    optimizer = tf.keras.optimizers.RMSprop(0.001)
+    model = keras.Sequential()
+    model.add(keras.layers.Dense(params['first_neuron'], activation=params['activation'])
+                                 # input_shape=[x_train.shape[1]])
+                                 # use_bias=True,
+                                 # kernel_initializer='glorot_uniform',
+                                 # bias_initializer='zeros',
+                                 # kernel_regularizer=keras.regularizers.l1_l2(l1=params['l1'], l2=params['l2']),
+                                 # bias_regularizer=None))
 
-    model.compile(loss='mse',
-                  optimizer=optimizer,
-                  metrics=['mae', 'mse'])
-    return model
+    # If we want to also test for number of layers and shapes, that's possible
+    # hidden_layers(model, params, 1)
 
+    # Then we finish again with completely standard Keras way
+    model.add(keras.layers.Dense(1, activation=params['activation'],
+                                 kernel_initializer='glorot_uniform'))
 
-model = build_model()
-model.summary()
+    model.compile(optimizer=params['optimizer'],
+                  loss=params['losses'])
+    # metrics=['mae', 'mse'])
 
-# Display training progress by printing a single dot for each completed epoch
+    history=model.fit(x_train, y_train,
+                        validation_data=[x_val, y_val],
+                        # batch_size=params['batch_size'],
+                        epochs=params['epochs'],
+                        verbose=0)
+
+    # finally we have to make sure that history object and model are returned
+    return history, model
 
 
-class PrintDot(keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs):
-        if epoch % 100 == 0:
-            print('')
-        print('.', end='')
+# then we can go ahead and set the parameter space
+p={'lr': (0.5, 5, 10),
+     # 'l1': [0.1, 0.2],
+     # 'l2': [0.1, 0.2],
+     'first_neuron': [4, 8, 16, 32, 64],
+     # 'hidden_layers': [0, 1, 2],
+     # 'batch_size': (2, 3, 4),
+     'epochs': [150],
+     # 'dropout': (0, 0.5, 5),
+     'weight_regulizer': [None],
+     'emb_output_dims': [None],
+     'optimizer': ['Adam', 'Nadam', 'SGD'],
+     'losses': ['MSE', 'MAE'],
+     'activation': ['tanh', 'relu', 'sigmoid']}
 
-
-EPOCHS = 100  # 1000
-
-history = model.fit(
-    x_train, y_train,
-    epochs=EPOCHS, validation_split=0.2, verbose=0,
-    callbacks=[PrintDot()])
-
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
-hist.tail()
-
-
-def plot_history(history):
-    hist = pd.DataFrame(history.history)
-    hist['epoch'] = history.epoch
-
-    plt.figure()
-    plt.xlabel('Epoch')
-    plt.ylabel('Mean Abs Error [flow]')
-    plt.plot(hist['epoch'], hist['mean_absolute_error'],
-             label='Train Error')
-    plt.plot(hist['epoch'], hist['val_mean_absolute_error'],
-             label='Val Error')
-    plt.legend()
-    plt.ylim([0, 5])
-
-    plt.figure()
-    plt.xlabel('Epoch')
-    plt.ylabel('Mean Square Error [$flow^2$]')
-    plt.plot(hist['epoch'], hist['mean_squared_error'],
-             label='Train Error')
-    plt.plot(hist['epoch'], hist['val_mean_squared_error'],
-             label='Val Error')
-    plt.legend()
-    plt.ylim([0, 20])
-
-
-plot_history(history)
-
-# Early stopping
-
-model = build_model()
-
-# The patience parameter is the amount of epochs to check for improvement
-early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
-
-history = model.fit(x_train, y_train, epochs=EPOCHS,
-                    validation_split=0.2, verbose=0, callbacks=[early_stop, PrintDot()])
-
-plot_history(history)
-
-# Loss on test set
-
-loss, mae, mse = model.evaluate(x_test, y_test, verbose=0)
-
-print("Testing set Mean Abs Error: {:5.2f} flow".format(mae))
-print("Testing set Mean Sq Error: {:5.2f} flow".format(mse))
-
-# Make predictions
-
-test_predictions = model.predict(x_test).flatten()
-
-plt.scatter(y_test, test_predictions);
-
-
-# Error distribution
-
-error = test_predictions - y_test
-plt.hist(error, bins=25);
-
-# TO ADD
-# L1/L2 regularization, dropout regularization
-# He initialization/Xavier initialization
-# Learning rate decay: SGD with momentum, rmsprop, adam
-# Batch normalization/Introduce batches?
-# Hyperparameter tuning: grid/random grid
+# and run the experiment
+t=ta.Scan(x=x_train,
+            y=y_train,
+            model=build_model,
+            grid_downsample=0.01,
+            params=p,
+            experiment_no='2')
