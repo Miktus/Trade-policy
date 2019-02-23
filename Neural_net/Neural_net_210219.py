@@ -1,7 +1,7 @@
 
 # Neural net created for the gravity model prediction for the Trade Policy class at PSE
 # Author: Michal Miktus at michal.miktus@gmail.com
-# Date: 19.02.2019
+# Date: 21.02.2019
 
 # Import libraries
 
@@ -19,11 +19,13 @@ import math
 import torch
 import seaborn as sns
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import talos as ta
-# from talos.model.layers import hidden_layers
-# from talos.model.normalizers import lr_normalizer
-
+from keras.optimizers import Adam, Nadam, SGD
+from keras.activations import relu, elu, sigmoid, tanh
+from keras.losses import mse
+from talos.model.normalizers import lr_normalizer
+from talos.model.layers import hidden_layers
 
 # from plotly import tools
 
@@ -243,54 +245,57 @@ for t in range(5):
 def build_model(x_train, y_train, x_val, y_val, params):
 
     model = keras.Sequential()
-    model.add(keras.layers.Dense(params['first_neuron'], activation=params['activation'])
-                                 # input_shape=[x_train.shape[1]])
-                                 # use_bias=True,
-                                 # kernel_initializer='glorot_uniform',
-                                 # bias_initializer='zeros',
-                                 # kernel_regularizer=keras.regularizers.l1_l2(l1=params['l1'], l2=params['l2']),
-                                 # bias_regularizer=None))
+    model.add(keras.layers.Dense(10, activation=params['activation'],
+                                 input_dim=x_train.shape[1],
+                                 use_bias=True,
+                                 kernel_initializer='glorot_uniform',
+                                 bias_initializer='zeros',
+                                 kernel_regularizer=keras.regularizers.l1_l2(l1=params['l1'], l2=params['l2']),
+                                 bias_regularizer=None))
+
+    model.add(keras.layers.Dropout(params['dropout']))
 
     # If we want to also test for number of layers and shapes, that's possible
-    # hidden_layers(model, params, 1)
+    hidden_layers(model, params, 1)
 
     # Then we finish again with completely standard Keras way
-    model.add(keras.layers.Dense(1, activation=params['activation'],
-                                 kernel_initializer='glorot_uniform'))
+    model.add(keras.layers.Dense(1, activation=params['activation'], use_bias=True,
+                                 kernel_initializer='glorot_uniform',
+                                 bias_initializer='zeros',
+                                 kernel_regularizer=keras.regularizers.l1_l2(l1=params['l1'], l2=params['l2']),
+                                 bias_regularizer=None))
 
-    model.compile(optimizer=params['optimizer'],
-                  loss=params['losses'])
-    # metrics=['mae', 'mse'])
+    model.compile(optimizer=params['optimizer'](lr=lr_normalizer(params['lr'], params['optimizer'])),
+                  loss=params['losses'],
+                  metrics=['mse'])
 
-    history=model.fit(x_train, y_train,
+    history = model.fit(x_train, y_train,
                         validation_data=[x_val, y_val],
-                        # batch_size=params['batch_size'],
+                        batch_size=params['batch_size'],
                         epochs=params['epochs'],
                         verbose=0)
 
-    # finally we have to make sure that history object and model are returned
+    # Finally we have to make sure that history object and model are returned
     return history, model
 
 
-# then we can go ahead and set the parameter space
-p={'lr': (0.5, 5, 10),
-     # 'l1': [0.1, 0.2],
-     # 'l2': [0.1, 0.2],
-     'first_neuron': [4, 8, 16, 32, 64],
-     # 'hidden_layers': [0, 1, 2],
-     # 'batch_size': (2, 3, 4),
-     'epochs': [150],
-     # 'dropout': (0, 0.5, 5),
-     'weight_regulizer': [None],
-     'emb_output_dims': [None],
-     'optimizer': ['Adam', 'Nadam', 'SGD'],
-     'losses': ['MSE', 'MAE'],
-     'activation': ['tanh', 'relu', 'sigmoid']}
+# Then we can go ahead and set the parameter space
+params = {'lr': (0.5, 5, 10),
+          'l1': (0.1, 50, 10),
+          'l2': (0.1, 50, 10),
+          'first_neuron': [4, 8, 16, 32, 64],
+          'hidden_layers': [0, 1, 2],
+          'batch_size': (2, 3, 4),
+          'epochs': [100],
+          'dropout': (0, 0.5, 5),
+          'optimizer': [Adam, Nadam, SGD],
+          'losses': [mse],
+          'activation': [relu, elu, sigmoid, tanh]}
 
-# and run the experiment
-t=ta.Scan(x=x_train,
+# Run the experiment
+t = ta.Scan(x=x_train,
             y=y_train,
             model=build_model,
-            grid_downsample=0.01,
-            params=p,
-            experiment_no='2')
+            grid_downsample=1,
+            val_split=0.3,
+            params=params)
