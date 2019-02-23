@@ -1,13 +1,10 @@
 
-require(readstata13)
-
-
-# Code for the 1st PS for Machine Learning in Econ class at PSE
+# Code for the Trade Policy class at PSE
 # Author: Michal Miktus at michal.miktus@gmail.com
-# Date: 03.02.2019
+# Date: 23.02.2019
 
 
-path <- '/Users/miktus/Documents/PSE/Trade policy'
+path <- '/Users/miktus/Documents/PSE/Trade policy/Model/'
 
 setwd(path)
 set.seed(12345)
@@ -23,17 +20,48 @@ if(length(new.packages)) install.packages(new.packages, repos = "http://cran.us.
 
 invisible(lapply(list.of.packages, library, character.only = TRUE))
 
+# Useful functions
+
+RMSE = function(m, o){
+  sqrt(mean((m - o)^2, na.rm=TRUE))
+}
 
 # Perform computations or load the data -----------------------------------
 
-data_cepii <- as.data.table(read.dta13(paste0(path,"/gravdata_cepii/gravdata.dta")))
-data_cepii_small <- as.data.table(read.dta13(paste0(path,"/gravdata_cepii/col_regfile09.dta")))
-trade <- as.data.table(read.dta13(paste0(path,"/gravdata_cepii/Trade_cepii8006_STATA.dta")))
+data_cepii <- as.data.table(read.dta13(paste0(path,"Data//gravdata.dta")))
+data_trade <- fread(paste0(path,"Data/trade_data.csv"))
+data_trade <- data_trade[, c('yr', 'TradeValue', 'rt3ISO', 'pt3ISO')]
 
+# Merge data
+
+data <- merge(data_cepii, data_trade, by.x = c('year', 'iso3_o', 'iso3_d'), by.y = c('yr', 'rt3ISO', 'pt3ISO'))
+data[, TradeValue := as.numeric(TradeValue)]
+fwrite(data, 'final_data_trade.csv')
+
+# Analysis for Poland, Germany
+
+countries_chosen <- c("POL")
+grav_small <- data[iso3_o %in% countries_chosen]
+
+data_bef2010 <- grav_small[year < 2010]
+data_aft2010 <- grav_small[year >= 2010]
+data_aft2010[, dist_log := log(distw)]
 
 # PPML: Poisson Pseudo Maximum Likelihood
 
-countries_chosen <- c("POL", "GER", "RUS", "SLO", "ITA")
-grav_small <- data_cepii_small[iso_o %in% countries_chosen]
+PPML <- ppml(dependent_variable="TradeValue", distance="distw", additional_regressors=c("comrelig"), robust=TRUE, data=data_bef2010)
 
-PPRML <- ppml(dependent_variable="flow", distance="distw", additional_regressors=c("rta","iso_o","iso_d"), robust=TRUE, data=grav_small)
+predictions <- predict(PPML, newdata = data_aft2010)
+
+RMSE(predictions, data_aft2010[, TradeValue])
+
+
+
+
+
+
+
+
+
+
+
