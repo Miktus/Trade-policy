@@ -28,32 +28,46 @@ RMSE = function(m, o){
 
 # Perform computations or load the data -----------------------------------
 
-data_cepii <- as.data.table(read.dta13(paste0(path,"Data//gravdata.dta")))
+data_cepii <- as.data.table(read.dta13(paste0(path,"Data/gravdata.dta")))
 data_trade <- fread(paste0(path,"Data/trade_data.csv"))
+
+# Delete cases for which the trading partner is unknown
+
+data_trade <- data_trade[complete.cases(data_trade[,pt3ISO])]
+
+# Convert TradeValues to numeric, with emphasis on scientific notation issues
+data_trade[, TradeValue := as.numeric(format(as.numeric(gsub(',', '.', TradeValue)), scientific = FALSE))]
 data_trade <- data_trade[, c('yr', 'TradeValue', 'rt3ISO', 'pt3ISO')]
+data_trade <- unique(data_trade[, 'Trade_value_total' := sum(TradeValue), by = c("yr", "rt3ISO", "pt3ISO")], by = c("yr", "rt3ISO", "pt3ISO", "Trade_value_total"))
+data_trade[, TradeValue := NULL]
+data_trade <- data_trade[!data_trade[, pt3ISO == 'WLD']]
 
 # Merge data
 
-data <- merge(data_cepii, data_trade, by.x = c('year', 'iso3_o', 'iso3_d'), by.y = c('yr', 'rt3ISO', 'pt3ISO'))
-data[, TradeValue := as.numeric(TradeValue)]
-fwrite(data, 'final_data_trade.csv')
+# Inner 
+data_inner <- merge(data_trade, data_cepii, by.y = c('year', 'iso3_o', 'iso3_d'), by.x = c('yr', 'rt3ISO', 'pt3ISO'))
 
-# Analysis for Poland, Germany
+#Left
+data_left <- merge(data_trade, data_cepii, by.y = c('year', 'iso3_o', 'iso3_d'), by.x = c('yr', 'rt3ISO', 'pt3ISO'), all.x = T)
+
+fwrite(data_inner, 'final_data_trade.csv')
+
+# Analysis for Poland
 
 countries_chosen <- c("POL")
-grav_small <- data[iso3_o %in% countries_chosen]
+grav_small <- data_inner[rt3ISO %in% countries_chosen]
 
-data_bef2010 <- grav_small[year < 2010]
-data_aft2010 <- grav_small[year >= 2010]
+data_bef2010 <- grav_small[yr < 2010]
+data_aft2010 <- grav_small[yr >= 2010]
 data_aft2010[, dist_log := log(distw)]
 
 # PPML: Poisson Pseudo Maximum Likelihood
 
-PPML <- ppml(dependent_variable="TradeValue", distance="distw", additional_regressors=c("comrelig"), robust=TRUE, data=data_bef2010)
+PPML <- ppml(dependent_variable="Trade_value_total", distance="distw", additional_regressors=c("comrelig"), robust=TRUE, data=data_bef2010)
 
 predictions <- predict(PPML, newdata = data_aft2010)
 
-RMSE(predictions, data_aft2010[, TradeValue])
+RMSE(predictions, data_aft2010[, Trade_value_total])
 
 
 
