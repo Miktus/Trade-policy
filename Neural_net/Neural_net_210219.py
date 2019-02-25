@@ -13,9 +13,9 @@ from scipy.stats import mstats
 from statsmodels.distributions.empirical_distribution import ECDF
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
+import os
 import numpy as np
 import pandas as pd
-import math
 import torch
 import seaborn as sns
 import tensorflow as tf
@@ -26,6 +26,7 @@ from keras.activations import relu, elu, sigmoid, tanh
 from keras.losses import mse
 from talos.model.normalizers import lr_normalizer
 from talos.model.layers import hidden_layers
+from talos.model.early_stopper import early_stopper
 
 # from plotly import tools
 
@@ -55,11 +56,17 @@ path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
 
 # Import data
 
-data = pd.read_stata(path + "/Data/col_regfile09.dta")
+data = pd.read_csv(path + "/Data/final_data_trade.csv")
 
-# Data exploration
+# Data exploration only for Poland
+
+data = data.loc[data['rt3ISO'] == "POL"]
 
 data
+
+# Number of trade partners
+
+data["pt3ISO"].unique().shape
 
 data.info()
 
@@ -71,7 +78,7 @@ data = data.drop_duplicates(keep='first')
 
 data.isnull().sum()
 
-data.dropna(thresh=data.shape[0] * 0.6, how='all', axis=1, inplace=True)
+data.dropna(thresh=data.shape[0] * 0.7, how='all', axis=1, inplace=True)
 
 data.dropna(axis=0, inplace=True)
 # data.fillna(data.mean(), inplace=True) # Or replace by the column mean
@@ -82,6 +89,7 @@ description = data.describe(include='all')
 coef_variation = description.loc["std"] / description.loc["mean"]
 description.loc["cova"] = coef_variation
 (description.sort_values(by="cova", axis=1)).T
+
 
 # Number of unique entries
 
@@ -99,12 +107,12 @@ for columns in data.loc[:, binary]:
 
 # Remove iso_2o, iso_2d and family
 
-data.drop(columns=['iso2_d', 'iso2_o', 'family'], inplace=True)
+data.drop(columns=['iso2_d', 'iso2_o'], inplace=True)
 
 # Numeric variables
 
 data_numeric = data._get_numeric_data()
-data_numeric.drop(columns="year", inplace=True)
+data_numeric.drop(columns="yr", inplace=True)
 data_numeric.drop(columns=binary, inplace=True)
 
 # Numerical data distribution
@@ -126,13 +134,12 @@ ecdf_normalized_df = data_numeric.apply(
 
 data[list(ecdf_normalized_df.columns.values)] = ecdf_normalized_df
 
-
 # Visualisations
 
 # Flows
-print(data['flow'].describe())
+print(data['Trade_value_total'].describe())
 
-flows_winsorized = mstats.winsorize(data['flow'], limits=[0.05, 0.05])
+flows_winsorized = mstats.winsorize(data['Trade_value_total'], limits=[0.05, 0.05])
 layout = go.Layout(
     title="Basic histogram of flows (winsorized)")
 
@@ -142,7 +149,7 @@ fig = go.Figure(data=data_hist, layout=layout)
 iplot(fig, filename='Basic histogram of flows')
 
 
-# Corr
+# Corr - to correct
 
 corr = ecdf_normalized_df.corr()
 
@@ -164,23 +171,29 @@ high_cova = description.loc["cova"].where(
     lambda x: x > 0.30).dropna().sort_values(ascending=False)
 high_cova
 
-# Select only POL as iso_o
+# Select only POL as rt3ISO
 
-data_PL = data.query("iso_o == 'POL'")
+data_PL = data.query("rt3ISO == 'POL'")
 
+data_PL.drop('rt3ISO', axis=1, inplace=True)
+
+data_PL.info()
 # One hot encoding
 data_PL = pd.get_dummies(
-    data_PL, columns=["iso_o", "iso_d"], prefix=["iso_o", "iso_d"])
+    data_PL, columns=["pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
+    prefix=["pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"])
 
 # Splitting the data
 
-train_size = 0.9
+# train_size = 0.9
+# train_cnt = math.floor(data_PL.shape[0] * train_size)
 
-train_cnt = math.floor(data_PL.shape[0] * train_size)
-x_train = data_PL.drop('flow', axis=1).iloc[0:train_cnt].values
-y_train = data_PL.loc[:, 'flow'].iloc[0:train_cnt].values
-x_test = data_PL.drop('flow', axis=1).iloc[train_cnt:].values
-y_test = data_PL.loc[:, 'flow'].iloc[train_cnt:].values
+splitting_yr = 2010
+
+x_train = data_PL.drop('Trade_value_total', axis=1).loc[data_PL['yr'] <= splitting_yr].values
+y_train = data_PL.loc[:, 'Trade_value_total'].loc[data_PL['yr'] <= splitting_yr].values
+x_test = data_PL.drop('Trade_value_total', axis=1).loc[data_PL['yr'] > splitting_yr].values
+y_test = data_PL.loc[:, 'Trade_value_total'].loc[data_PL['yr'] > splitting_yr].values
 
 # Build NN class in PyTorch
 
@@ -239,7 +252,7 @@ for t in range(5):
     loss.backward()
     optimizer.step()
 
-# Build NN class in TensorFlow
+# Build NN class in Keras
 
 
 def build_model(x_train, y_train, x_val, y_val, params):
@@ -273,13 +286,15 @@ def build_model(x_train, y_train, x_val, y_val, params):
                         validation_data=[x_val, y_val],
                         batch_size=params['batch_size'],
                         epochs=params['epochs'],
+                        callbacks=[early_stopper(epochs=params['epochs'], mode='strict')],
                         verbose=0)
 
     # Finally we have to make sure that history object and model are returned
     return history, model
 
+# Then we can go ahead and set the parameters space
 
-# Then we can go ahead and set the parameter space
+
 params = {'lr': (0.5, 5, 10),
           'l1': (0.1, 50, 10),
           'l2': (0.1, 50, 10),
@@ -292,10 +307,29 @@ params = {'lr': (0.5, 5, 10),
           'losses': [mse],
           'activation': [relu, elu, sigmoid, tanh]}
 
+# Alternatively small parameters space
+
+params_small = {'lr': (0.5, 5, 2),
+                'l1': (0.1, 50, 2),
+                'l2': (0.1, 50, 2),
+                'first_neuron': [4],
+                'hidden_layers': [0],
+                'batch_size': [32],  # [32, 64, 128, 256],
+                'epochs': [100],
+                'dropout': (0, 0.5, 2),
+                'optimizer': [Adam],
+                'losses': [mse],
+                'activation': [relu]}
+
 # Run the experiment
+
+os.chdir(path + "/Data/")
+
 t = ta.Scan(x=x_train,
             y=y_train,
             model=build_model,
             grid_downsample=1,
             val_split=0.3,
-            params=params)
+            params=params_small,
+            dataset_name='POL',
+            experiment_no='2')
