@@ -1,4 +1,3 @@
-
 # Neural net created for the gravity model prediction for the Trade Policy class at PSE
 # Author: Michal Miktus at michal.miktus@gmail.com
 # Date: 21.02.2019
@@ -7,6 +6,7 @@
 
 import plotly.io as pio
 import plotly.graph_objs as go
+import plotly.plotly as py
 from plotly.offline import init_notebook_mode, iplot
 from matplotlib import pyplot as plt
 from scipy.stats import mstats
@@ -16,10 +16,10 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import os
 import numpy as np
 import pandas as pd
-import torch
+#import torch
 import seaborn as sns
-import tensorflow as tf
 import keras
+import tensorflow as tf
 import talos as ta
 from keras.optimizers import Adam, Nadam, SGD
 from keras.activations import relu, elu, sigmoid, tanh
@@ -27,6 +27,7 @@ from keras.losses import mse
 from talos.model.normalizers import lr_normalizer
 from talos.model.layers import hidden_layers
 from talos.model.early_stopper import early_stopper
+%matplotlib inline
 
 # from plotly import tools
 
@@ -36,7 +37,7 @@ from talos.model.early_stopper import early_stopper
 random_state = 123
 np.random.seed(random_state)
 tf.set_random_seed(random_state)
-torch.manual_seed(random_state)
+#torch.manual_seed(random_state)
 
 # Supress scientific notation for pandas
 
@@ -52,7 +53,8 @@ init_notebook_mode(connected=True)
 
 # Path specifiation
 
-path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
+#path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
+path = "C:/Repo/Trade/Trade-policy/"
 
 # Import data
 
@@ -62,7 +64,7 @@ data = pd.read_csv(path + "/Data/final_data_trade.csv")
 
 data = data.loc[data['rt3ISO'] == "POL"]
 
-data
+data.columns
 
 # Number of trade partners
 
@@ -115,28 +117,65 @@ data_numeric = data._get_numeric_data()
 data_numeric.drop(columns="yr", inplace=True)
 data_numeric.drop(columns=binary, inplace=True)
 
-# Numerical data distribution
-
-data_numeric.hist(figsize=(10, 10), bins=50, xlabelsize=8, ylabelsize=8)
-
-# Normalization
-
-minmax_normalized_df = pd.DataFrame(MinMaxScaler().fit_transform(data_numeric),
-                                    columns=data_numeric.columns, index=data_numeric.index)
-
-standardized_df = pd.DataFrame(StandardScaler().fit_transform(data_numeric), columns=data_numeric.columns,
-                               index=data_numeric.index)
-
-ecdf_normalized_df = data_numeric.apply(
-    lambda c: pd.Series(ECDF(c)(c), index=c.index))
-
-# Replace data by its standardized values
-
-data[list(ecdf_normalized_df.columns.values)] = ecdf_normalized_df
-
 # Visualisations
 
+# Numerical data distribution
+data_numeric.hist(figsize=(10, 10), bins=50, xlabelsize=8, ylabelsize=8)
+
+for i, col in enumerate(data_numeric.columns):
+    plt.figure(i)
+    sns.distplot(data_numeric[col], color="y")
+
+sns.distplot(data_numeric["tdiff"], color="y")
+
+sns.pairplot(data_numeric);
+sns.pairplot(data_numeric, vars=["pop_o", "tdiff"]) # kind="reg"/kind="kde"
+
+
+
 # Flows
+flows = data[['yr','rt3ISO','pt3ISO','Trade_value_total']]
+data_loc = pd.read_csv(path + "/Data/CountryLatLong.csv")
+data_loc.drop(columns=['Country'], inplace=True)
+data_loc.columns = ["CODE", "rt_Lat", "rt_Long"]
+
+flows = pd.merge(flows, data_loc, left_on="rt3ISO", right_on="CODE").drop('CODE', axis=1)
+data_loc.columns = ["CODE", "pt_Lat", "pt_Long"]
+flows = pd.merge(flows, data_loc, left_on="pt3ISO", right_on="CODE").drop('CODE', axis=1)
+
+flow_directions = []
+for i in range( len( flows ) ):
+    flow_directions.append(
+        dict(
+            type = 'scattergeo',
+            locationmode = 'ISO-3',
+            lon = [ flows['rt_Long'][i], flows['pt_Long'][i]],
+            lat = [ flows['rt_Lat'][i], flows['pt_Lat'][i]],
+            text = flows['pt3ISO'][i],
+            mode = 'lines',
+            line = dict(
+                width = flows['Trade_value_total'][i]*10,
+                color = 'red',
+            ),
+            opacity = 200 * np.power(float(flows['yr'][i]) - float(flows['yr'].min()),2)/float(np.power(float(flows['yr'].max()),2)),
+        )
+    )
+
+layout = dict(
+        title = 'Trade flows between Poland and its trading partners.',
+        showlegend = False,
+        geo = dict(
+            scope='world',
+            projection=dict( type='robinson' ),
+            showland = True,
+            landcolor = 'rgb(243, 243, 243)',
+            countrycolor = 'rgb(204, 204, 204)',
+        )
+    )
+
+fig = dict( data=flow_directions, layout=layout )
+iplot( fig, filename='Flows map' )
+
 print(data['Trade_value_total'].describe())
 
 flows_winsorized = mstats.winsorize(data['Trade_value_total'], limits=[0.05, 0.05])
@@ -147,6 +186,7 @@ data_hist = [go.Histogram(x=flows_winsorized)]
 fig = go.Figure(data=data_hist, layout=layout)
 
 iplot(fig, filename='Basic histogram of flows')
+sns.distplot(data['Trade_value_total'], axlabel= "Basic histogram of flows", color="y")
 
 
 # Corr - to correct
@@ -167,9 +207,26 @@ fig = go.Figure(data=data_cova, layout=layout)
 iplot(fig,
       filename="Coefficient of variation")
 
-high_cova = description.loc["cova"].where(
-    lambda x: x > 0.30).dropna().sort_values(ascending=False)
+high_cova = description.loc["cova"].where(lambda x: x > 0.30).dropna().sort_values(ascending=False)
 high_cova
+
+
+
+# Normalization
+
+minmax_normalized_df = pd.DataFrame(MinMaxScaler().fit_transform(data_numeric),
+                                    columns=data_numeric.columns, index=data_numeric.index)
+
+standardized_df = pd.DataFrame(StandardScaler().fit_transform(data_numeric), columns=data_numeric.columns,
+                               index=data_numeric.index)
+
+ecdf_normalized_df = data_numeric.apply(
+    lambda c: pd.Series(ECDF(c)(c), index=c.index))
+
+# Replace data by its standardized values
+
+data[list(ecdf_normalized_df.columns.values)] = ecdf_normalized_df
+
 
 # Select only POL as rt3ISO
 
@@ -178,6 +235,7 @@ data_PL = data.query("rt3ISO == 'POL'")
 data_PL.drop('rt3ISO', axis=1, inplace=True)
 
 data_PL.info()
+
 # One hot encoding
 data_PL = pd.get_dummies(
     data_PL, columns=["pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
@@ -224,33 +282,33 @@ class ThreeLayerNet(torch.nn.Module):
         return y_pred
 
 
-x = torch.tensor(x_train).float()
-y = torch.tensor(y_train).float()
+#x = torch.tensor(x_train).float()
+#y = torch.tensor(y_train).float()
 
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
 N, D_in, H_in, H_out, D_out = int(data_PL.shape[0]), int((data_PL.shape[1] - 1)), 50, 50, 1
 
 # Construct our model by instantiating the class defined above
-model = ThreeLayerNet(D_in, H_in, H_out, D_out)
+#model = ThreeLayerNet(D_in, H_in, H_out, D_out)
 
 # Construct our loss function and an Optimizer. The call to model.parameters()
 # in the SGD constructor will contain the learnable parameters of the three
 # nn.Linear modules which are members of the model.
-criterion = torch.nn.MSELoss(reduction='sum')
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
-for t in range(5):
-    # Forward pass: Compute predicted y by passing x to the model
-    y_pred = model(x)
-
-    # Compute and print loss
-    loss = criterion(y_pred, y)
-    print(t, loss.item())
-
-    # Zero gradients, perform a backward pass, and update the weights.
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+#criterion = torch.nn.MSELoss(reduction='sum')
+#optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
+#for t in range(5):
+#    # Forward pass: Compute predicted y by passing x to the model
+#    y_pred = model(x)
+#
+#    # Compute and print loss
+#    loss = criterion(y_pred, y)
+#    print(t, loss.item())
+#
+#    # Zero gradients, perform a backward pass, and update the weights.
+#    optimizer.zero_grad()
+#    loss.backward()
+#    optimizer.step()
 
 # Build NN class in Keras
 

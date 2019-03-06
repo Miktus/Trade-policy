@@ -4,7 +4,8 @@
 # Date: 23.02.2019
 
 
-path <- '/Users/miktus/Documents/PSE/Trade policy/Model/'
+#path <- '/Users/miktus/Documents/PSE/Trade policy/Model/'
+path <- 'C:/Repo/Trade/Trade-policy/'
 
 setwd(path)
 set.seed(12345)
@@ -32,7 +33,6 @@ data_cepii <- as.data.table(read.dta13(paste0(path,"Data/gravdata.dta")))
 data_trade <- fread(paste0(path,"Data/trade_data.csv"))
 
 # Delete cases for which the trading partner is unknown
-
 data_trade <- data_trade[complete.cases(data_trade[,pt3ISO])]
 
 # Convert TradeValues to numeric, with emphasis on scientific notation issues
