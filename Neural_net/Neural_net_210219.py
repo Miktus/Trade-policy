@@ -353,19 +353,20 @@ def build_model(x_train, y_train, x_val, y_val, params):
 # Then we can go ahead and set the parameters space
 
 
-params = {'lr': (0.5, 5, 10),
-          'l1': (0.1, 50, 10),
-          'l2': (0.1, 50, 10),
-          'first_neuron': [4, 8, 16, 32, 64],
+params = {'lr': (0.5, 4, 4),
+          'l1': (0.1, 40, 4),
+          'l2': (0.1, 40, 4),
+          'first_neuron': [4, 8, 16],
           'hidden_layers': [0, 1, 2],
-          'batch_size': (2, 3, 4),
-          'epochs': [100],
+          'batch_size': [32, 64],
+          'epochs': [250],
           'dropout': (0, 0.5, 5),
-          'optimizer': [Adam, Nadam, SGD],
+          'optimizer': [Adam, SGD],
           'losses': [mse],
-          'activation': [relu, elu, sigmoid, tanh]}
+          'activation': [relu, sigmoid]}
 
 # Alternatively small parameters space
+
 
 params_small = {'lr': (0.5, 5, 2),
                 'l1': (0.1, 50, 2),
@@ -388,6 +389,6 @@ t = ta.Scan(x=x_train,
             model=build_model,
             grid_downsample=1,
             val_split=0.3,
-            params=params_small,
+            params=params,
             dataset_name='POL',
             experiment_no='2')
