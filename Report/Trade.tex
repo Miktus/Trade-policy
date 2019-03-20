@@ -1,0 +1,254 @@
+\documentclass{Trade_template}
+\usepackage[a4paper,pdftex]{geometry}                                                                           % A4paper margins
+\setlength{\oddsidemargin}{5mm}                                                                                         % Remove 'twosided' indentation
+\setlength{\evensidemargin}{5mm}
+\usepackage[protrusion=true,expansion=true]{microtype}  
+\usepackage{amsmath,amsfonts,amsthm,amssymb}
+\usepackage{graphicx}
+\usepackage{parallel,enumitem}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{rotating}
+\usepackage{amsmath, bm}
+\usepackage{amsfonts}
+\usepackage[T1]{fontenc}
+\usepackage[polish,english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{subfigure}
+\usepackage{array}
+\usepackage{etoolbox}
+\usepackage{hyperref}
+\usepackage{algorithm2e}
+\usepackage[noend]{algpseudocode}
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{booktabs}
+\usepackage{caption} 
+\captionsetup[table]{skip=10pt}
+\captionsetup[algorithm2e]{skip=10pt}
+\usepackage{booktabs,caption,fixltx2e}
+\usepackage[para,online,flushleft]{threeparttable}
+\usepackage{adjustbox}
+\usepackage{lscape}
+\usepackage[round]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{nameref}
+
+\hypersetup{pdfstartview={XYZ null null 1.00}}
+
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\numberwithin{equation}{section}
+
+\lstset{ %
+  language=python,                     % the language of the code
+  basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+  numbers=left,                   % where to put the line-numbers
+  numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
+  stepnumber=1,                   % the step between two line-numbers. If it's 1, each line
+                                  % will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  frame=single,                   % adds a frame around the code
+  rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. commens (green here))
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+  title=\lstname,                 % show the filename of files included with \lstinputlisting;
+                                  % also try caption instead of title
+  keywordstyle=\color{blue},      % keyword style
+  commentstyle=\color{ForestGreen},   % comment style
+  stringstyle=\color{Orchid},      % string literal style
+  escapeinside={\%*}{*)},         % if you want to add a comment within your code
+  morekeywords={*,...}            % if you want to add more keywords to the set
+} 
+
+\lstset{ %
+  language=R,                     % the language of the code
+  basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+  numbers=left,                   % where to put the line-numbers
+  numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
+  stepnumber=1,                   % the step between two line-numbers. If it's 1, each line
+                                  % will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  frame=single,                   % adds a frame around the code
+  rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. commens (green here))
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+  title=\lstname,                 % show the filename of files included with \lstinputlisting;
+                                  % also try caption instead of title
+  keywordstyle=\color{blue},      % keyword style
+  commentstyle=\color{ForestGreen},   % comment style
+  stringstyle=\color{Orchid},      % string literal style
+  escapeinside={\%*}{*)},         % if you want to add a comment within your code
+  morekeywords={*,...}            % if you want to add more keywords to the set
+} 
+
+
+\author{Michał Miktus, Mateusz Szmidt}
+
+\nralbumu{11716114, XXXXXXXX}
+
+\title{Machine learning approach \\
+to trade flows estimation}
+
+\kierunek{Analysis and Policy in Economics}
+
+\opiekun{Pablo Winant Ph. D.\\
+  Paris School of Economics\\
+  }
+
+\date{March 2019}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}{Lemma}
+\newtheorem{mydef}{Definition}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\listoffigures
+\listoftables
+%\listofalgorithms
+
+
+\chapter*{Introduction} \label{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+Since the pioneer work of \citet{tinbergen1962analysis}, the gravity equations has been widely implemented in the estimation of bilateral trade flows. The fundamental insight that the volume of trade between two countries is proportional to the product of an index of their economic sizes diminished by the measures of “trade resistance” between them has shaped the empirical specifications mainly due to the surprisingly good fit to the majority of data sets of both regional, as well as international trade flows. Over time the \citet{tinbergen1962analysis} approach has been modified and enhanced, not to mention the supplementary theoretical underpinnings such as additional measures of trade resistance in spite of the classical ones (geographic distance, a dummy for common borders or dummies for Commonwealth memberships) or better estimation methods, allowing for the inclusion of zero-trade flows in the framework. 
+
+The following paper aims to implement the modern machine learning algorithms in the framework of gravity modeling in order to predict the bilateral trade flows. Machine learning can be viewed as an application of artificial intelligence (AI) which provides systems the ability to automatically learn and improve from experience without being explicitly programmed. In other words, machine learning focuses on the development of computer programs that can access data and use it learn for themselves, without human intervention or assistance, and adjust actions accordingly. The latest advancements in machine learning allowed to effortlessly identify patterns in data and use them to automatically make predictions or decisions. To the authors' best knowledge, the following paper is the first try in implementing the above-mentioned framework to the trade policy analysis.
+
+In addition, due to the familiarity of both authors to the Polish trade environment, the Poland trade relations has been chosen as a workhorse illustration. Obtained results prove that a neural network approach can be viewed as a grievous challenger to the classical estimation methods, such as Poisson Pseudo-Maximum Likelihood models or ordinary fixed panel data estimators.
+
+The paper is organized as follows: the first chapter consists of the brief literature review, including the common gravity models and the estimation techniques, followed by the data characterization. Next sections provide a detailed description of the neural network approach enhanced by the hyper-parameters tuning and outline the main results. The paper is completed with the concluding remarks with potential extensions, references and appendices with codes in R and Python.
+
+\chapter{Literature review}
+
+The traditional gravity model was developed in the 1960s to explain factory-to-consumer trade (\citet{tinbergen1962analysis}). The above-mentioned concept was at the heart of the first clear microfoundations of the gravity equation – the seminal \citet{anderson1979theoretical}, proposing a theoretical explanation of the gravity equation based on constant elasticity of substitution preferences of nations producing a single differentiated product. In parallel, the monopolistic competition versions were introduced (\citet{krugman1980scale}, \citet{bergstrand1985gravity}), followed by the work of \citet{anderson2003gravity}, expanding appropriate econometric techniques and introducing the microeconomic framework to the previously promoted monopolistic competition. Subsequent theoretical refinements have further focused on showing that the gravity equation can be derived from trade models with heterogeneous firms (\citet{helpman2008estimating}).
+
+Simultaneously, the estimation techniques were progressing, starting from the basic least square estimator and its correspondent panel data version, meaning the fixed effect estimator. The endogeneity issues guided to the establishment of instrumental variables and two step least squares methodologies in the gravity models framework. Nevertheless, all the above-mentioned techniques leaded to the potentially biased results due to the requirement of elimination of the zero trade flows, Therefore, the Poisson Pseudo-Maximum Likelihood model, as well as zero-inflated negative binomial models were proposed and over the years became the flagship framework for the bilateral trade flows estimation.
+
+HERE GOES THE POISSON SHORT DESCRIPTION AND ONE SENTENCE ABOUT FE
+
+\chapter{Data exploration}
+
+For the first part of the data, namely the set of explanatory variables, the CEPII statistics were used, resulting in annual data of 60 variables at the cross country level. Then, using 3 digit ISO codes the dataset was joined with the trade flows information. Nevertheless, in contrary to the first, fully available online dataset, in order to obtain data on flows from Comtrade database, a data scrapper needed to be created. The authors expanded and modified the scrapping function delivered by Comtrade which in the end allowed to bypass all the limitations build into basic API and optimize the time of data scrapping. The exact code can be found in \nameref{Appendix A}. 
+
+\chapter{Neural network approach}
+
+The neural networks approach is a statistical framework allowing to find complex patterns of relations in the data. The intuition behind the above-mentioned concept is often compared to the way of how human nerve system functions. In a nutshell, it can be characterized as follows - in the first phase the external signal is received by receptors and transfered to the set of neurons. Then, during further stages, it is iteratively processed and passed to next set of neurons until the signal is finally decoded. The structure of the neural network model similarly compounds of 3 elements: the input layer of independent variables, set of "hidden layers” and finally the output layer with calculated results of a model. Given the structure, in each phase besides the last one, the values of nodes from former layer are affinely transformed and then nonlinear function in performed in order to obtain the values for each node of a new layer. The calculations are repeated until the last phase when the final value is accessed through a nonlinear function of affine product of nodes from previous layers. The aforementioned process, starting from an input data and aiming to compute the output, is called the \textit{forward propagation} and can be seen as a function of coefficients coined within every single affine transformation taking place between all neighbouring layers.
+
+As a result, the estimated trade flows from the neural network approach rely on finding the appropriate values of parameters under arbitrary selected structure of a model. Thus in the first stage, the values of the coefficients are randomly assigned and then the forward propagation is performed. Next, based on model’s output and true values of the observable dependent variable, the arbitrary chosen loss function is calculated. It has to be underlined that due to the fact that the generated output is a result of forward propagation, the loss function can be also defined as a function of the same parameters. It allows to compute a derivative with respect to them and in the end, to recalibrate their values – such a process is called  \textit{backward propagation} and it is iteratively repeated together with forward propagation to minimize the loss function, optimizing the values of parameters. 
+
+Although the intuition and general process behind the estimation of neural network model were presented above, a plethora of aspects referred to depends on arbitrary chosen structure or so called \textit{architecture of a model}. Therefore, some choices implemented in the final, best suited to the data architecture of the model need to be elaborated.
+
+Firstly, a number of hidden layers intuitively allows to approximate any continuous function more carefully, nevertheless adding any next layer is computationally costly. The charge born is strictly related to another element of a model’s structure, namely the number of neurons in each layer. It has to be emphasised that the above-mentioned amount can be different depending on a layer but again bigger number directly translates into higher cost. Consequently, to take advantage of computer architecture and to optimize processing time, a power of 2 neurons in each layer were implemented, as suggested in the literature.
+
+It has been already mentioned that each node is in fact defined as a function of the values of neurons from the former layer. It is thus beneficial to remark that it can be enforced that a node from hidden layer is a function of only a subset of nodes from a former one. Depending on the problem such an idea might be intuitive, not to mention the picture recognition, but it does not seem to be relevant in trade flows case. What is more, during the learning process such an exclusion of particular nodes may appear anyway, when the weights in affine transformations are relatively close to zero. Thus, the network with nodes being functions of all previous ones will be considered.
+
+Moreover, the nonlinear transformation of a product of former nodes has to be defined. In the neural network framework, it is often called \textit{an activation function}, aiming to activate the particular neuron on a hidden layer and assign to it some positive value when the particular pattern within a former nodes is observed. In a neural network literature, a particular set of functions can be observed, which by construction allows the model to be trained faster due to computational advantage while deriving derivatives and which satisfy the basic intuition behind activation. The most common ones are presented below.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Activation}
+\caption[Activation functions]{Activation functions\footnotemark}
+\end{figure} 
+
+\footnotetext{Source: \url{https://bit.ly/2uh7NyV}}
+
+The actually implemented in the end are sigmoid and relu. The first one was especially popular in the past, while the second one gained the popularity recently, outperforming the former with respect to the computational time.
+
+At this stage, the part of hyper-parameters of models’ structure directly connected to the forward propagation was covered. As far as the backward propagation choices are concerned, a loss function given the generated output has to be chosen. In the paper, the mean squared error was selected to validate the output. Moreover, in order to prevent the problem of overfitting, the regularization was implemented. The role of the aforementioned concept is simply to penalize the actual loss function of the model so that increase of the coefficients to some extent negatively affects the loss function. The value of a hyper-parameter of a penalty function identifies the size of marginal increase in a loss function alone to be compensated by the penalty. 
+
+\bigskip
+
+Another approach to prevent from overfitting is dropout, This technique allows
+
+The exact code of neural network with hyper-parameters tuning can be found in \nameref{Appendix B}.
+
+\chapter{Results}
+
+As far as the main results from the trade flows prediction through a neural network approach are concerned, the best performing ten models are presented:
+
+\begin{table}[!htp]
+\footnotesize{
+\centering
+\caption{Results of neural network}
+\begin{tabular}{*{9}{c}}
+\toprule
+N & N\_iter & Val\_loss & Val\_MSE & Loss & MSE & LR & L1 & L2 \\ \midrule
+1 & 250 & 2,865 & 0,077 & 2,889 & 0,079 & 0,5 & 0,1 & 20,05 \\
+2 & 202 & 1,528 & 0,078 & 1,542 & 0,079 & 0,5 & 10075 & 10075 \\
+3 & 37 & 1,500 & 0,074 & 1,518 & 0,079 & 0,5 & 10075 & 10075\\
+4 & 75 & 0,099 & 0,078 & 0,100 & 0,080 & 0,5 & 0,1 & 10075 \\
+5 & 201 & 1,567 & 0,078 & 1,598 & 0,080 & 0,5 & 10075 & 20,05 \\
+6 & 41 & 0,466 & 0,079 & 0,468 & 0,080 & 3125 & 0,1 & 0,1\\
+7 & 174 & 0,107 & 0,079 & 0,108 & 0,080 & 0,5 & 0,1 & 30025 \\
+8 & 250 & 1,026 & 0,079 & 1,032 & 0,081 & 0,5 & 0,1 & 10075 \\
+9 & 129 & 0,677 & 0,080 & 0,679 & 0,081 & 0,5 & 0,1 & 0,1 \\
+10 & 65 & 0,379 & 0,080 & 0,381 & 0,081 & 1375 & 0,1 & 0,1 \\ \bottomrule
+& & & & & & & &  \\
+N & First  & Hidden & Batch & Epochs & Dropout & Opt & Losses & Activation \\ \midrule
+1 & 4 & 1 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
+2 & 8 & 1 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
+3 & 4 & 1 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
+4 & 16 & 1 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
+5 & 4 & 1 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
+6 & 4 & 2 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
+7 & 4 & 2 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
+8 & 4 & 1 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
+9 & 8 & 2 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
+10 & 4 & 2 & 64 & 250 & 0,000 &   Adam & MSE & relu \\ \bottomrule
+\end{tabular}
+\caption*{\small{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, epochs, dropout, optimizer, losses, activation function;}}}
+\end{table}
+
+
+
+
+
+\chapter{Concluding remarks} \label{Concluding remarks}
+
+Here goes the conclusion.
+
+\newpage
+
+\nocite{*}
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{Trade_bib}
+
+\newpage
+
+\chapter*{Appendix A} \label{Appendix A}
+\addcontentsline{toc}{chapter}{Appendix A}
+
+\lstinputlisting{Scrapper.R}
+
+\chapter*{Appendix B} \label{Appendix B}
+\addcontentsline{toc}{chapter}{Appendix B}
+
+\lstinputlisting{Neural_net.py}
+
+\newpage
+
+
+\end{document}
