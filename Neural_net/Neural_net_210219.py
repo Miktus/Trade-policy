@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from scipy.stats import mstats
 from statsmodels.distributions.empirical_distribution import ECDF
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from scipy.stats import mode
 
 import os
 import numpy as np
@@ -33,7 +34,6 @@ from talos.model.early_stopper import early_stopper
 
 
 # Set seed
-
 random_state = 123
 np.random.seed(random_state)
 tf.set_random_seed(random_state)
@@ -50,9 +50,7 @@ sns.set(style="ticks", context="talk")
 plt.style.use("dark_background")
 init_notebook_mode(connected=True)
 
-
 # Path specifiation
-
 #path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
 path = "C:/Repo/Trade/Trade-policy/"
 
@@ -63,7 +61,8 @@ data = pd.read_csv(path + "/Data/final_data_trade.csv")
 # Data exploration only for Poland
 
 data = data.loc[data['rt3ISO'] == "POL"]
-
+max(data['yr'])
+data.shape
 data.columns
 
 # Number of trade partners
@@ -111,6 +110,10 @@ for columns in data.loc[:, binary]:
 
 data.drop(columns=['iso2_d', 'iso2_o'], inplace=True)
 
+# Filtering the data for Poland only
+
+data = data.query("rt3ISO == 'POL'")
+
 # Numeric variables
 
 data_numeric = data._get_numeric_data()
@@ -118,102 +121,132 @@ data_numeric.drop(columns="yr", inplace=True)
 data_numeric.drop(columns=binary, inplace=True)
 
 # Visualisations
+visualise_all = False
 
 # Numerical data distribution
-data_numeric.hist(figsize=(10, 10), bins=50, xlabelsize=8, ylabelsize=8)
+if visualise_all:
+    data_numeric.hist(figsize=(10, 10), bins=50, xlabelsize=8, ylabelsize=8)
+    for i, col in enumerate(data_numeric.columns):
+        plt.figure(i)
+        sns.distplot(data_numeric[col], color="y")
 
-for i, col in enumerate(data_numeric.columns):
+    sns.distplot(data_numeric["tdiff"], color="y")
+
+    sns.pairplot(data_numeric);
+    sns.pairplot(data_numeric, vars=["Trade_value_total", "distw", "gdp_o"] ) # kind="reg"/kind="kde"
+    print(data['Trade_value_total'].describe())
+
+    flows_winsorized = mstats.winsorize(data['Trade_value_total'], limits=[0.05, 0.05])
+    layout = go.Layout(
+        title="Basic histogram of flows (winsorized)")
+
+    data_hist = [go.Histogram(x=flows_winsorized)]
+    fig = go.Figure(data=data_hist, layout=layout)
+
+    iplot(fig, filename='Basic histogram of flows')
+    sns.distplot(data['Trade_value_total'], axlabel= "Basic histogram of flows", color="y")
+
+    # Corr - to correct
+
+    corr = ecdf_normalized_df.corr()
+
+    sns.heatmap(corr[(corr >= 0.5) | (corr <= -0.5)],
+                cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.1,
+                annot=True, annot_kws={"size": 8}, square=True)
+    # Coef of variation
+
+    layout = go.Layout(
+        title="Coefficient of variation")
+
+    data_cova = [go.Histogram(x=description.loc["cova"])]
+    fig = go.Figure(data=data_cova, layout=layout)
+    iplot(fig,
+          filename="Coefficient of variation")
+    high_cova = description.loc["cova"].where(lambda x: x > 0.30).dropna().sort_values(ascending=False)
+    high_cova
+
+# Selected Visualisations
+
+# Histogram of flows over the history
+sns.distplot(np.log(data["Trade_value_total"]), axlabel= "Basic histogram of flows", color="blue")
+
+# Histograms for chosen years
+years = (1994, 2000, 2009, 2015)
+for i in years:
     plt.figure(i)
-    sns.distplot(data_numeric[col], color="y")
+    sns.distplot(np.log(data["Trade_value_total"].loc[data['yr'] == i]), axlabel= "Logarithm of flows in year " +  str(i), color="blue")
 
-sns.distplot(data_numeric["tdiff"], color="y")
+# Horizontal alternative, shit doesn't work
+#fig = plt.figure()
+#index = 0
+#for i in years:
+#    index = index + 1
+#    fig.add_subplot(1, 4, index)
+#    sns.distplot(np.log(data_numeric["Trade_value_total"].loc[data_PL['yr'] == i]),ax = a, axlabel= "Flows in year " + str(i), color="blue")
 
-sns.pairplot(data_numeric);
-sns.pairplot(data_numeric, vars=["pop_o", "tdiff"]) # kind="reg"/kind="kde"
+# Just in case you can check
+# sns.violinplot([np.log(data_numeric["Trade_value_total"]), np.log(data_numeric["distw"])], color = "blue")
 
-
-
-# Flows
-flows = data[['yr','rt3ISO','pt3ISO','Trade_value_total']]
-data_loc = pd.read_csv(path + "/Data/CountryLatLong.csv")
-data_loc.drop(columns=['Country'], inplace=True)
-data_loc.columns = ["CODE", "rt_Lat", "rt_Long"]
-
-flows = pd.merge(flows, data_loc, left_on="rt3ISO", right_on="CODE").drop('CODE', axis=1)
-data_loc.columns = ["CODE", "pt_Lat", "pt_Long"]
-flows = pd.merge(flows, data_loc, left_on="pt3ISO", right_on="CODE").drop('CODE', axis=1)
-
-flow_directions = []
-for i in range( len( flows ) ):
-    flow_directions.append(
-        dict(
-            type = 'scattergeo',
-            locationmode = 'ISO-3',
-            lon = [ flows['rt_Long'][i], flows['pt_Long'][i]],
-            lat = [ flows['rt_Lat'][i], flows['pt_Lat'][i]],
-            text = flows['pt3ISO'][i],
-            mode = 'lines',
-            line = dict(
-                width = flows['Trade_value_total'][i]*10,
-                color = 'red',
-            ),
-            opacity = 200 * np.power(float(flows['yr'][i]) - float(flows['yr'].min()),2)/float(np.power(float(flows['yr'].max()),2)),
-        )
-    )
-
-layout = dict(
-        title = 'Trade flows between Poland and its trading partners.',
-        showlegend = False,
-        geo = dict(
-            scope='world',
-            projection=dict( type='robinson' ),
-            showland = True,
-            landcolor = 'rgb(243, 243, 243)',
-            countrycolor = 'rgb(204, 204, 204)',
-        )
-    )
-
-fig = dict( data=flow_directions, layout=layout )
-iplot( fig, filename='Flows map' )
-
-print(data['Trade_value_total'].describe())
-
-flows_winsorized = mstats.winsorize(data['Trade_value_total'], limits=[0.05, 0.05])
-layout = go.Layout(
-    title="Basic histogram of flows (winsorized)")
-
-data_hist = [go.Histogram(x=flows_winsorized)]
-fig = go.Figure(data=data_hist, layout=layout)
-
-iplot(fig, filename='Basic histogram of flows')
-sns.distplot(data['Trade_value_total'], axlabel= "Basic histogram of flows", color="y")
+# Pairplot for distance, Trade_value_total and gdp - choose data and if needed logarithms of values
+data_pairplot = data_numeric[["Trade_value_total", "distw", "gdp_d"]]
+#data_pairplot["Trade_value_total"] = np.log(data_pairplot["Trade_value_total"])
+#data_pairplot["distw"] = np.log(data_pairplot["distw"])
+#data_pairplot["gdp_d"] = np.log(data_pairplot["gdp_d"])
+sns.pairplot(data_pairplot, vars=["Trade_value_total", "distw", "gdp_d"], kind="scatter", markers=".",  diag_kind="kde",
+                            plot_kws=dict(s=50, edgecolor="blue", linewidth=1),  diag_kws=dict(shade=True,  color="blue"))
 
 
-# Corr - to correct
+# Summary statistics table
+values = pd.DataFrame(data.nunique(0), columns = ["count"])
+values["column"] = values.index
+keep = values["column"].loc[values["count"] > 1 ]
+data = data[data.columns.intersection(list(keep.append(pd.Series(["rt3ISO"]))))]
+values = pd.DataFrame(data.nunique(0), columns = ["count"])
+values["column"] = values.index
+discrete = values["column"].loc[values["count"] <= 10 ]
+continues =  values["column"].loc[values["count"] > 10 ]
+continues = pd.DataFrame(data[data.columns.intersection(list(continues.drop(["pt3ISO", "yr"])))].describe(include='all').transpose())
+continues["Description"] = ["Total value of trade between reporting and partner countries",
+                            "Weighted bilateral distance between reporting and partner countries in kilometer (population weighted)",
+                            "Population of reporting country, total in million",
+                            "Population of partner country, total in million",
+                            "GDP of reporting country (current US$)",
+                            "GDP of partner country (current US$)",
+                            "GDP per capita of reporting country (current US$)",
+                            "GDP per capita of partner country (current US$)",
+                            "Area of partner country in sq. kilometers",
+                            "Time difference between reporting and partner countries, in number of hours. For countries which stretch over more than  one  time  zone,  the  respective  time  zone  is generated via the mean of all its time zones (for instance: Russia, Canada, USA)",
+                            "Religious proximity (Disdier and Mayer, 2007) is an index calculated by adding the productsof the shares of Catholics, Protestants and Muslims in the exporting and importing countries. It is bounded between 0 and 1, and is maximum if the country pair has a religion which (1) comprises a vast majority of the population, and (2) is the same in both countries. Source of religion shares: LaPorta, Lopez-de-Silanes, Shleiferand Vishny(1999), completed with the CIA world factbook"]
 
-corr = ecdf_normalized_df.corr()
+# Final table for continues variables
+pd.DataFrame(continues[continues.columns.drop(["count"])]).style.format({'total_amt_usd_pct_diff': "{:.2%}"})
 
-sns.heatmap(corr[(corr >= 0.5) | (corr <= -0.5)],
-            cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.1,
-            annot=True, annot_kws={"size": 8}, square=True)
+discrete = pd.DataFrame(data[data.columns.intersection(list(discrete.append(pd.Series(["yr", "pt3ISO"]))))]).apply(lambda r: pd.Series({'Count': r.nunique(), 'Most Common Value' : str(mode(r)[0]).replace("[", "").replace("]", "").replace(".", "") })).transpose()
+discrete["Description"] = ["Year",
+                            "Standard ISO code for reporting country (three letters)",
+                            "Standard ISO code for partner country (three letters)",
+                            "Dummy for contiguity",
+                            "Dummy if parter country is current or former hegemon of origin",
+                            "Dummy for reporting and partner countries colonial relationship post 1945",
+                            "Dummy for reporting and partner countries ever in colonial relationship",
+                            "Dummy for reporting and partner countries ever in sibling relationship, i.e. two colonies of the same empire",
+                            "Dummy if reporting and partner countries share common legal origins before transition",
+                            "Dummy if reporting and partner countries share common legal origins after transition",
+                            "Dummy if common legal origin changed since transition",
+                            "Legal system of partner country before transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
+                            "Legal system of partner country after transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
+                            "Dummy if partner country is GATT/WTO member",
+                            "Dummy for Regional Trade Agreement",
+                            "Dummy for ACP country exporting to EC/EU member",
+                            "Dummy if origin is donator in Generalized System of Preferences (GSP)",
+                            "Report changes in Rose’s data on <gsp_o_d>. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999",
+                            "Dummy if reporting country a member of the European Union",
+                            "Dummy if partner country a member of the European Union"]
 
-# Coef of variation
-
-layout = go.Layout(
-    title="Coefficient of variation")
-
-data_cova = [go.Histogram(x=description.loc["cova"])]
-fig = go.Figure(data=data_cova, layout=layout)
-iplot(fig,
-      filename="Coefficient of variation")
-
-high_cova = description.loc["cova"].where(lambda x: x > 0.30).dropna().sort_values(ascending=False)
-high_cova
-
+discrete
 
 
 # Normalization
-
 minmax_normalized_df = pd.DataFrame(MinMaxScaler().fit_transform(data_numeric),
                                     columns=data_numeric.columns, index=data_numeric.index)
 
@@ -228,19 +261,83 @@ ecdf_normalized_df = data_numeric.apply(
 data[list(ecdf_normalized_df.columns.values)] = ecdf_normalized_df
 
 
-# Select only POL as rt3ISO
+# Heatmap
+corr = ecdf_normalized_df.corr()
+sns.heatmap(corr[(corr >= 0.3) | (corr <= -0.3)],
+                cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.05,
+                annot=True, annot_kws={"size": 5}, square=True)
 
+
+
+# Visualise flows - you can choose two parameters
+scope = 'world'
+# or 'europe'
+flow_treshold = 0.92
+
+
+
+flows = data[['yr','rt3ISO','pt3ISO','Trade_value_total']]
+data_loc = pd.read_csv(path + "/Data/CountryLatLong.csv")
+data_loc.drop(columns=['Country'], inplace=True)
+data_loc.columns = ["CODE", "rt_Lat", "rt_Long"]
+
+flows = pd.merge(flows, data_loc, left_on="rt3ISO", right_on="CODE").drop('CODE', axis=1)
+data_loc.columns = ["CODE", "pt_Lat", "pt_Long"]
+flows = pd.merge(flows, data_loc, left_on="pt3ISO", right_on="CODE").drop('CODE', axis=1)
+
+flow_directions = []
+for i in range( len( flows ) ):
+    if (flows['Trade_value_total'][i] > flow_treshold):
+        flow_directions.append(
+            dict(
+                type = 'scattergeo',
+                locationmode = 'ISO-3',
+                lon = [ flows['rt_Long'][i], flows['pt_Long'][i]],
+                lat = [ flows['rt_Lat'][i], flows['pt_Lat'][i]],
+                text = flows['pt3ISO'][i],
+                mode = 'lines',
+                line = dict(
+                    width = flows['Trade_value_total'][i] * 10 ,
+                    color = 'blue',
+                ),
+                #opacity = 0,5 * (float(flows['yr'][i])/1994)
+                opacity = np.power(float(flows['yr'][i]) - float(flows['yr'].min()),2)/10/float(np.power(float(flows['yr'].max()- float(flows['yr'].min())),2)),
+            )
+        )
+
+
+layout = dict(
+        title = 'Trade flows between Poland and its trading partners.',
+        showlegend = False,
+        geo = dict(
+            scope= scope,
+            projection=dict( type='robinson' ),
+            showland = True,
+            landcolor = 'rgb(243, 243, 243)',
+            countrycolor = 'rgb(204, 204, 204)',
+        )
+    )
+
+fig = dict( data=flow_directions, layout=layout )
+iplot( fig, filename='Flows map' )
+
+
+# Select only POL as rt3ISO (done twice but does not hurt)
 data_PL = data.query("rt3ISO == 'POL'")
-
+data_PL["year"] = data_PL["yr"]
 data_PL.drop('rt3ISO', axis=1, inplace=True)
-
-data_PL.info()
 
 # One hot encoding
 data_PL = pd.get_dummies(
-    data_PL, columns=["pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
-    prefix=["pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"])
+    data_PL, columns=["year", "pt3ISO", "legold_d", "legnew_d", "flaggsp_o_d"],
+    prefix=["yr", "pt3ISO", "legold_d", "legnew_d", "flaggsp_o_d"])
 
+# More general version - does not work for Poland
+#data_PL = pd.get_dummies(
+#    data_PL, columns=["year", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
+#    prefix=["yr", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"])
+
+#data_PL.to_csv("data_PL.csv")
 # Splitting the data
 
 # train_size = 0.9
@@ -248,9 +345,9 @@ data_PL = pd.get_dummies(
 
 splitting_yr = 2010
 
-x_train = data_PL.drop('Trade_value_total', axis=1).loc[data_PL['yr'] <= splitting_yr].values
+x_train = data_PL.drop('yr', axis=1).drop('Trade_value_total', axis=1).loc[data_PL['yr'] <= splitting_yr].values
 y_train = data_PL.loc[:, 'Trade_value_total'].loc[data_PL['yr'] <= splitting_yr].values
-x_test = data_PL.drop('Trade_value_total', axis=1).loc[data_PL['yr'] > splitting_yr].values
+x_test = data_PL.drop('yr', axis=1).drop('Trade_value_total', axis=1).loc[data_PL['yr'] > splitting_yr].values
 y_test = data_PL.loc[:, 'Trade_value_total'].loc[data_PL['yr'] > splitting_yr].values
 
 # Build NN class in PyTorch
@@ -372,7 +469,8 @@ params_small = {'lr': (0.5, 5, 2),
                 'l1': (0.1, 50, 2),
                 'l2': (0.1, 50, 2),
                 'first_neuron': [4],
-                'hidden_layers': [0],
+                'l1': (0.1, 50, 2),
+                'hidden_layer()s': [0],
                 'batch_size': [32],  # [32, 64, 128, 256],
                 'epochs': [100],
                 'dropout': (0, 0.5, 2),
