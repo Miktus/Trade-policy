@@ -3,17 +3,15 @@
 # Date: 23.02.2019
 
 
-#path <- '/Users/miktus/Documents/PSE/Trade policy/Model/'
-path <- 'C:/Repo/Trade/Trade-policy/'
+path <- '/Users/miktus/Documents/PSE/Trade policy/Model/'
+# path <- 'C:/Repo/Trade/Trade-policy/'
 
 setwd(path)
 set.seed(12345)
 
-
 # Load packages -----------------------------------------------------
 
-
-list.of.packages <- c("readstata13", "data.table", "gravity", "dplyr")
+list.of.packages <- c("readstata13", "data.table", "gravity", "dplyr", 'stargazer', 'caret')
 
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages, repos = "http://cran.us.r-project.org")
@@ -27,16 +25,23 @@ RMSE = function(m, o){
 }
 
 # Load the data ----------------------------------------------------
+
 data <- fread(paste0(path,"Data/data_PL.csv"))
 names(data) <- make.names(names(data), unique=TRUE)
 
-# Data split to compare the reults
+# Near zero variance variables
 
+near <- nearZeroVar(data)
+
+data <- data[, -near, with = FALSE]
+
+# Data split to compare the reults
 
 data_bef2010 <- data[yr <= 2010]
 data_aft2010 <- data[yr > 2010]
 data_aft2010[, dist_log := log(distw)]
 var <- setdiff(names(data_bef2010), c("Trade_value_total", "distw", "V1", "yr"))
+
 
 # PPML: Poisson Pseudo Maximum Likelihood
 
@@ -46,12 +51,16 @@ predictions <- predict(PPML, newdata = data_aft2010)
 residuals <- predictions - data_aft2010[,"Trade_value_total"]
 MSE <- mean(sum(residuals^2)/length(unlist(residuals)))
 max(unlist(residuals))
+
+# Summary to latex
+
+stargazer(PPML)
+
 # FE ----------------------------------------------------
 
 dependent <- c("Trade_value_total")
 continous <- c("distw", "pop_o", "pop_d", "gdp_o", "gdp_d", "area_d", "tdiff", "comrelig")
 log_variables <- paste("log(",continous, ")", sep = "")
-log_variables <- continous
 dummies <- setdiff(setdiff(names(data_bef2010), continous), dependent) 
 
 linear_het <- as.formula(paste(paste("log(",dependent, ")", sep = ""),
@@ -73,7 +82,15 @@ max(residuals)
 MSE_FE_test <- (sum(residuals^2)/length(unlist(residuals)))
 MSE_FE_test
 
-FE <- lm(linear_het, data = data_aft2010)
-MSE_FE_aft <- mean(sum(FE$residuals^2)/length(FE$residuals))
-MSE_FE_aft
+# Summary to latex
+
+stargazer(FE)
+
+# FE on test
+
+# FE <- lm(linear_het, data = data_aft2010)
+# MSE_FE_aft <- mean(sum(FE$residuals^2)/length(FE$residuals))
+# MSE_FE_aft
+
+
 

@@ -34,6 +34,9 @@
 \usepackage[round]{natbib}
 \bibliographystyle{plainnat}
 \usepackage{nameref}
+\usepackage{tabularx}
+\usepackage{array}
+
 
 \hypersetup{pdfstartview={XYZ null null 1.00}}
 
@@ -45,6 +48,9 @@
 }
 
 \numberwithin{equation}{section}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\newcolumntype{L}{>{\centering\arraybackslash}m{2.5cm}}
+\newcolumntype{M}{>{\centering\arraybackslash}m{3.5cm}}
 
 \lstset{ %
   language=python,                     % the language of the code
@@ -103,7 +109,7 @@
 
 \author{Michał Miktus, Mateusz Szmidt}
 
-\nralbumu{11716114, XXXXXXXX}
+\nralbumu{}
 
 \title{Machine learning approach \\
 to trade flows estimation}
@@ -153,6 +159,108 @@ HERE GOES THE POISSON SHORT DESCRIPTION AND ONE SENTENCE ABOUT FE
 
 For the first part of the data, namely the set of explanatory variables, the CEPII statistics were used, resulting in annual data of 60 variables at the cross country level. Then, using 3 digit ISO codes the dataset was joined with the trade flows information. Nevertheless, in contrary to the first, fully available online dataset, in order to obtain data on flows from Comtrade database, a data scrapper needed to be created. The authors expanded and modified the scrapping function delivered by Comtrade which in the end allowed to bypass all the limitations build into basic API and optimize the time of data scrapping. The exact code can be found in \nameref{Appendix A}. 
 
+The variables used in the calculations, along with their descriptions, are presented in the following table.
+
+\begin{table}[]
+\centering
+\small{
+\begin{tabularx}{\textwidth}{@{} M X  @{}}
+\toprule
+Variable & Description \\ \midrule
+yr & Year \\ rt3ISO & Standard ISO code for reporting country (three letters) \\
+pt3ISO & Standard ISO code for partner country (three letters) \\
+contig & Dummy for contiguity \\
+heg\_d & Dummy if parter country is current or former hegemon of origin \\
+col\_fr & Dummy for reporting and partner countries colonial relationship post 1945 \\
+colony & Dummy for reporting and partner countries ever in colonial relationship \\
+sibling & Dummy for reporting and partner countries ever in sibling relationship i.e. two colonies of the same empire \\
+comleg\_pretrans & Dummy if reporting and partner countries share common legal origins before transition \\
+comleg\_posttrans & Dummy if reporting and partner countries share common legal origins after transition \\
+transition\_legalchange & Dummy if common legal origin changed since transition \\
+legold\_d & Legal system of partner country before transition. This variable takes the values: fr for French, ge for German, sc for Scandinavian, so for Socialist and uk for British legal origin \\
+legnew\_d & Legal system of partner country after transition. This variable takes the values: fr for French, ge for German, sc for Scandinavian, so for Socialist and uk for British legal origin \\
+gatt\_d & Dummy if partner country is GATT/WTO member \\
+fta\_wto & Dummy for Regional Trade Agreement \\
+eu\_to\_acp & Dummy for ACP country exporting to EC/EU member \\
+gsp\_o\_d & Dummy if origin is donator in Generalized System of Preferences (GSP) \\
+flaggsp\_o\_d & Report changes in Roses data on \textless{}gsp\_o\_d\textgreater{}. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999 \\
+eu\_o & Dummy if reporting country a member of the European Union \\
+eu\_d & Dummy if partner country a member of the European Union \\
+Trade\_value\_total & Total value of trade between reporting and partner countries \\
+distw & Weighted bilateral distance between reporting and partner countries in kilometer (population weighted) \\
+pop\_o & Population of reporting country total in million \\
+pop\_d & Population of partner country total in million \\
+gdp\_o & GDP of reporting country (current US\$) \\
+gdp\_d & GDP of partner country (current US\$) \\
+gdpcap\_o & GDP per capita of reporting country (current US\$) \\
+gdpcap\_d & GDP per capita of partner country (current US\$) \\
+area\_d & Area of partner country in sq. kilometers \\
+tdiff & Time difference between reporting and partner countries in number of hours. For countries which stretch over more than  one  time  zone   the  respective  time  zone  is generated via the mean of all its time zones (for instance: Russia, Canada, USA) \\
+comrelig & Religious proximity (\citet{disdier2007je}) is an index calculated by adding the products of the shares of Catholics, Protestants and Muslims in the exporting and importing countries. It is bounded between 0 and 1 and is maximum if the country pair has a religion which (1) comprises a vast majority of the population and (2) is the same in both countries. \\ \bottomrule
+\end{tabularx}}
+\end{table}
+
+The summary statistics:
+
+\begin{sidewaystable}
+    \centering
+    \caption{Your caption here}
+\tiny{
+\begin{tabularx}{\textwidth}{@{} L *{12}{Y}  @{}}
+\toprule
+Variable & count & unique & top & freq & mean & std & min & 25\% & 50\% & 75\% & max & cova  \\ \midrule
+gatt\_o & 4060.00 & NaN & NaN & NaN & 1.00 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.00 \\
+area\_o & 4060.00 & NaN & NaN & NaN & 312685.00 & 0.00 & 312685.00 & 312685.00 & 312685.00 & 312685.00 & 312685.00 & 0.00 \\
+yr & 4060.00 & NaN & NaN & NaN & 2004.49 & 6.31 & 1994.00 & 1999.00 & 2005.00 & 2010.00 & 2015.00 & 0.00 \\
+pop\_o & 4060.00 & NaN & NaN & NaN & 38.33 & 0.22 & 38.00 & 38.15 & 38.23 & 38.54 & 38.66 & 0.01 \\
+gdp\_o & 4060.00 & NaN & NaN & NaN & 3.19e+11 & 1.55e+11 & 1.09e+11" & 1.72e+11" & 3.04e+11 & 4.77e+11 & 5.45e+11 & 0.48 \\
+gdpcap\_o & 4060.00 & NaN & NaN & NaN & 8339.74 & 4052.41 & 2819.70 & 4483.24 & 7976.12 & 12554.55 & 14341.86 & 0.49 \\
+gatt\_d & 4060.00 & NaN & NaN & NaN & 0.75 & 0.43 & 0.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.57 \\
+distw & 4060.00 & NaN & NaN & NaN & 6140.89 & 3899.61 & 387.07 & 2603.11 & 5845.77 & 8583.18 & 17653.91 & 0.64 \\
+eu\_o & 4060.00 & NaN & NaN & NaN & 0.55 & 0.50 & 0.00 & 0.00 & 1.00 & 1.00 & 1.00 & 0.91 \\
+tdiff & 4060.00 & NaN & NaN & NaN & 3.38 & 3.12 & 0.00 & 1.00 & 2.00 & 6.00 & 12.00 & 0.92 \\
+comrelig & 4060.00 & NaN & NaN & NaN & 0.25 & 0.28 & 0.00 & 0.01 & 0.11 & 0.45 & 0.79 & 1.15 \\
+gdpcap\_d & 4060.00 & NaN & NaN & NaN & 10410.33 & 16066.97 & 64.81 & 864.06 & 3223.29 & 13299.54 & 116612.88 & 1.54 \\
+gsp\_o\_d & 4060.00 & NaN & NaN & NaN & 0.24 & 0.43 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 1.80 \\
+fta\_wto & 4060.00 & NaN & NaN & NaN & 0.23 & 0.42 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 1.84 \\
+eu\_to\_acp & 4060.00 & NaN & NaN & NaN & 0.21 & 0.40 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 1.96 \\
+comleg\_pretrans & 4060.00 & NaN & NaN & NaN & 0.17 & 0.38 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 2.20 \\
+transition\_legalchange & 4060.00 & NaN & NaN & NaN & 0.13 & 0.34 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 2.55 \\
+area\_d & 4060.00 & NaN & NaN & NaN & 719321.80 & 1956801.49 & 25.00 & 25713.00 & 119902.00 & 547244.00 & 17075400.00 & 2.72 \\
+eu\_d & 4060.00 & NaN & NaN & NaN & 0.11 & 0.32 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 2.81 \\
+comleg\_posttrans & 4060.00 & NaN & NaN & NaN & 0.10 & 0.30 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 2.96 \\
+pop\_d & 4060.00 & NaN & NaN & NaN & 34.23 & 129.66 & 0.01 & 1.69 & 6.66 & 21.70 & 1371.22 & 3.79 \\
+gdp\_d & 4060.00 & NaN & NaN & NaN & 2.64e+11 & 1.13e+12 & 1.09e+07 & 3.16e+09 & 1.46e+10 & 1.04e+11 & 1.80e+13 & 4.30 \\
+Trade\_value\_total & 4060.00 & NaN & NaN & NaN & 1.12e+09 & 5.30e+09 & 0.00 & 1.52e+06 & 2.34e+07 & 2.35e+08 & 1.03e+11 & 4.74 \\
+contig & 4060.00 & NaN & NaN & NaN & 0.04 & 0.19 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 5.04 \\
+sibling & 4060.00 & NaN & NaN & NaN & 0.03 & 0.16 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 6.02 \\
+colony & 4060.00 & NaN & NaN & NaN & 0.01 & 0.07 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 13.55 \\
+col\_fr & 4060.00 & NaN & NaN & NaN & 0.01 & 0.07 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 13.55 \\
+heg\_d & 4060.00 & NaN & NaN & NaN & 0.01 & 0.07 & 0.00 & 0.00 & 0.00 & 0.00 & 1.00 & 13.55 \\
+rt3ISO & 4060.00 & 1 & POL & 4060 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+pt3ISO & 4060.00 & 190 & ARE & 22 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+iso2\_o & 4060.00 & 1 & PL & 4060 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+iso2\_d & 4060.00 & 190 & BZ & 22 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+comlang\_off & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+comlang\_ethno & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+comcol & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+col45 & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+heg\_o & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+col\_to & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+curcol & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+cursib & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+comcur & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+legold\_o & 4060.00 & 1 & so & 4060 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+legold\_d & 4060.00 & 5 & fr & 1759 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+legnew\_o & 4060.00 & 1 & ge & 4060 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+legnew\_d & 4060.00 & 5 & fr & 2153 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+acp\_to\_eu & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+gsp\_d\_d & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & NaN \\
+flaggsp\_o\_d & 4060.00 & 3 & no gsp recorded in Rose & 3099 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
+flaggsp\_d\_d & 4060.00 & 1 & no gsp recorded in Rose & 4060 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\ \bottomrule
+\end{tabularx}}
+\end{sidewaystable}
+
 \chapter{Neural network approach}
 
 The neural networks approach is a statistical framework allowing to find complex patterns of relations in the data. The intuition behind the above-mentioned concept is often compared to the way of how human nerve system functions. In a nutshell, it can be characterized as follows - in the first phase the external signal is received by receptors and transfered to the set of neurons. Then, during further stages, it is iteratively processed and passed to next set of neurons until the signal is finally decoded. The structure of the neural network model similarly compounds of 3 elements: the input layer of independent variables, set of "hidden layers” and finally the output layer with calculated results of a model. Given the structure, in each phase besides the last one, the values of nodes from former layer are affinely transformed and then nonlinear function in performed in order to obtain the values for each node of a new layer. The calculations are repeated until the last phase when the final value is accessed through a nonlinear function of affine product of nodes from previous layers. The aforementioned process, starting from an input data and aiming to compute the output, is called the \textit{forward propagation} and can be seen as a function of coefficients coined within every single affine transformation taking place between all neighbouring layers.
@@ -179,17 +287,17 @@ The actually implemented in the end are sigmoid and relu. The first one was espe
 
 At this stage, the part of hyper-parameters of models’ structure directly connected to the forward propagation was covered. As far as the backward propagation choices are concerned, a loss function given the generated output has to be chosen. In the paper, the mean squared error was selected to validate the output. Moreover, in order to prevent the problem of overfitting, the regularization was implemented. The role of the aforementioned concept is simply to penalize the actual loss function of the model so that increase of the coefficients to some extent negatively affects the loss function. The value of a hyper-parameter of a penalty function identifies the size of marginal increase in a loss function alone to be compensated by the penalty. 
 
-\bigskip
+Another regularization approach which can be implemented simultaneously is dropout. It serves to omit a fraction of randomly chosen nodes (along with their connections) on each layer while performing both forward and backward propagation. Thus, it enforces iterative deactivation of different neurons which diminish the pace of convergence but also stanches from overfitting the model. Nevertheless, it may simultaneously negatively influence the convergence, therefore a maximum number of iterations, in neural network framework called \textit{epochs}, has to be specified. Choice of its value always brings a trade-off between a computational time and optimality of solution. One way (actually implemented in the paper) of meeting halfway is to set a threshold for marginal increase in loss function, ending the learning process sooner if the condition is fulfilled.
 
-Another approach to prevent from overfitting is dropout, This technique allows
+In fact, it is a learning process itself which determines the final performance of neural network framework. To fully define it, few more elements of a model’s structure have to be recalled. As mentioned before, the estimation is based on calculating numerous derivatives with respect to all the parameters, according to the chain-rule, which in the end determines for a given set of parameters’ values a point-gradient. However, as the neural networks tend to be defined over an enormous parameter space, the straightforward calculation of a gradient might be a complex task itself. Therefore, different optimization algorithms were implemented. The first one is Stochastic Gradient Decent (SGD), which calculates new iteration of parameters according to the specified learning rate, which is in turn another hyper-parameter of the model, defining the convergence speed. However, in standard SGD the learning rate is not scalable and it poorly handles updating the parameters of high variance. To deal with it, the second method is proposed, namely the Adam optimizer, which becomes gradually common recently. It allows to adjust the specified learning rate for each parameter and is often more efficient. Lastly, to speed up the whole process the hyper-parameter called batch size can be defined. The model chooses a subsample in a size of batch and performs an iteration using only selected observations. Therefore, it allows to train the model each time on different observation set and reduces the complexity of the whole process.
 
-The exact code of neural network with hyper-parameters tuning can be found in \nameref{Appendix B}.
+At this stage all the elements of model architecture are defined, allowing to implement the neural network on the presented grid of hyper-parameters and proceed with an estimation, with exact codes included in \nameref{Appendix B}.
 
 \chapter{Results}
 
-As far as the main results from the trade flows prediction through a neural network approach are concerned, the best performing ten models are presented:
+As far as the main outcomes from the trade flows prediction through a neural network approach are concerned, the best performing ten models are presented in the following \nameref{Results} Table.
 
-\begin{table}[!htp]
+\begin{table}[!htp] \label{Results}
 \footnotesize{
 \centering
 \caption{Results of neural network}
@@ -219,12 +327,8 @@ N & First  & Hidden & Batch & Epochs & Dropout & Opt & Losses & Activation \\ \m
 9 & 8 & 2 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
 10 & 4 & 2 & 64 & 250 & 0,000 &   Adam & MSE & relu \\ \bottomrule
 \end{tabular}
-\caption*{\small{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, epochs, dropout, optimizer, losses, activation function;}}}
+\caption*{\small{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, maximum number of epochs, dropout, optimizer, losses, activation function;}}}
 \end{table}
-
-
-
-
 
 \chapter{Concluding remarks} \label{Concluding remarks}
 

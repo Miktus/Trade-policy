@@ -32,12 +32,13 @@ from talos.model.early_stopper import early_stopper
 
 # from plotly import tools
 
+pd.options.display.float_format = '{:.2f}'.format
 
 # Set seed
 random_state = 123
 np.random.seed(random_state)
 tf.set_random_seed(random_state)
-#torch.manual_seed(random_state)
+# torch.manual_seed(random_state)
 
 # Supress scientific notation for pandas
 
@@ -45,14 +46,14 @@ pd.options.display.float_format = '{:.5f}'.format
 
 # Templates for graphs
 
-pio.templates.default = 'plotly_dark+presentation'
+# pio.templates.default = 'plotly_dark+presentation'
 sns.set(style="ticks", context="talk")
-plt.style.use("dark_background")
+plt.style.use("seaborn")
 init_notebook_mode(connected=True)
 
 # Path specifiation
-#path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
-path = "C:/Repo/Trade/Trade-policy/"
+path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
+# path = "C:/Repo/Trade/Trade-policy/"
 
 # Import data
 
@@ -88,6 +89,7 @@ data.dropna(axis=0, inplace=True)
 # Desribe data
 
 description = data.describe(include='all')
+description.loc['count'] = pd.to_numeric(description.loc['count'])
 coef_variation = description.loc["std"] / description.loc["mean"]
 description.loc["cova"] = coef_variation
 (description.sort_values(by="cova", axis=1)).T
@@ -134,7 +136,7 @@ if visualise_all:
     sns.distplot(data_numeric["tdiff"], color="y")
 
     sns.pairplot(data_numeric);
-    sns.pairplot(data_numeric, vars=["Trade_value_total", "distw", "gdp_o"] ) # kind="reg"/kind="kde"
+    sns.pairplot(data_numeric, vars=["Trade_value_total", "distw", "gdp_o"])  # kind="reg"/kind="kde"
     print(data['Trade_value_total'].describe())
 
     flows_winsorized = mstats.winsorize(data['Trade_value_total'], limits=[0.05, 0.05])
@@ -145,7 +147,7 @@ if visualise_all:
     fig = go.Figure(data=data_hist, layout=layout)
 
     iplot(fig, filename='Basic histogram of flows')
-    sns.distplot(data['Trade_value_total'], axlabel= "Basic histogram of flows", color="y")
+    sns.distplot(data['Trade_value_total'], axlabel="Basic histogram of flows", color="y")
 
     # Corr - to correct
 
@@ -169,18 +171,24 @@ if visualise_all:
 # Selected Visualisations
 
 # Histogram of flows over the history
-sns.distplot(np.log(data["Trade_value_total"] + 1), axlabel= "Basic histogram of flows", color="blue")
+
+hist_all = sns.distplot(np.log(data["Trade_value_total"] + 1), axlabel="Basic histogram of flows", color="blue")
+
+
+hist_all.figure.savefig('Histogram of flows over the history.png', bbox_inches="tight")
 
 # Histograms for chosen years
 years = (1994, 2000, 2009, 2015)
 for i in years:
     plt.figure(i)
-    sns.distplot(np.log(data["Trade_value_total"].loc[data['yr'] == i] + 1), axlabel= "Logarithm of flows in year " +  str(i), color="blue")
+    hist_temp = sns.distplot(np.log(data["Trade_value_total"].loc[data['yr'] == i] + 1), axlabel="Logarithm of flows in year " + str(i), color="blue")
+    hist_temp.figure.savefig('Histogram of flows for ' + str(i) + '.png', bbox_inches="tight")
+
 
 # Horizontal alternative, shit doesn't work
 #fig = plt.figure()
 #index = 0
-#for i in years:
+# for i in years:
 #    index = index + 1
 #    fig.add_subplot(1, 4, index)
 #    sns.distplot(np.log(data_numeric["Trade_value_total"].loc[data_PL['yr'] == i]),ax = a, axlabel= "Flows in year " + str(i), color="blue")
@@ -193,19 +201,20 @@ data_pairplot = data_numeric[["Trade_value_total", "distw", "gdp_d"]]
 #data_pairplot["Trade_value_total"] = np.log(data_pairplot["Trade_value_total"] + 1)
 #data_pairplot["distw"] = np.log(data_pairplot["distw"])
 #data_pairplot["gdp_d"] = np.log(data_pairplot["gdp_d"])
-sns.pairplot(data_pairplot, vars=["Trade_value_total", "distw", "gdp_d"], kind="scatter", markers=".",  diag_kind="kde",
-                            plot_kws=dict(s=50, edgecolor="blue", linewidth=1),  diag_kws=dict(shade=True,  color="blue"))
+pairplot = sns.pairplot(data_pairplot, vars=["Trade_value_total", "distw", "gdp_d"], kind="scatter", markers=".",  diag_kind="kde",
+                        plot_kws=dict(s=50, edgecolor="blue", linewidth=1),  diag_kws=dict(shade=True,  color="blue"))
+pairplot.savefig('Pairplots.png', bbox_inches="tight")
 
 
 # Summary statistics table
-values = pd.DataFrame(data.nunique(0), columns = ["count"])
+values = pd.DataFrame(data.nunique(0), columns=["count"])
 values["column"] = values.index
-keep = values["column"].loc[values["count"] > 1 ]
+keep = values["column"].loc[values["count"] > 1]
 data = data[data.columns.intersection(list(keep.append(pd.Series(["rt3ISO"]))))]
-values = pd.DataFrame(data.nunique(0), columns = ["count"])
+values = pd.DataFrame(data.nunique(0), columns=["count"])
 values["column"] = values.index
-discrete = values["column"].loc[values["count"] <= 10 ]
-continues =  values["column"].loc[values["count"] > 10 ]
+discrete = values["column"].loc[values["count"] <= 10]
+continues = values["column"].loc[values["count"] > 10]
 continues = pd.DataFrame(data[data.columns.intersection(list(continues.drop(["pt3ISO", "yr"])))].describe(include='all').transpose())
 continues["Description"] = ["Total value of trade between reporting and partner countries",
                             "Weighted bilateral distance between reporting and partner countries in kilometer (population weighted)",
@@ -222,29 +231,29 @@ continues["Description"] = ["Total value of trade between reporting and partner 
 # Final table for continues variables
 pd.DataFrame(continues[continues.columns.drop(["count"])]).style.format({'total_amt_usd_pct_diff': "{:.2%}"})
 
-discrete = pd.DataFrame(data[data.columns.intersection(list(discrete.append(pd.Series(["yr", "pt3ISO"]))))]).apply(lambda r: pd.Series({'Count': r.nunique(), 'Most Common Value' : str(mode(r)[0]).replace("[", "").replace("]", "").replace(".", "") })).transpose()
+discrete = pd.DataFrame(data[data.columns.intersection(list(discrete.append(pd.Series(["yr", "pt3ISO"]))))]).apply(lambda r: pd.Series({'Count': r.nunique(), 'Most Common Value': str(mode(r)[0]).replace("[", "").replace("]", "").replace(".", "")})).transpose()
 discrete["Description"] = ["Year",
-                            "Standard ISO code for reporting country (three letters)",
-                            "Standard ISO code for partner country (three letters)",
-                            "Dummy for contiguity",
-                            "Dummy if parter country is current or former hegemon of origin",
-                            "Dummy for reporting and partner countries colonial relationship post 1945",
-                            "Dummy for reporting and partner countries ever in colonial relationship",
-                            "Dummy for reporting and partner countries ever in sibling relationship, i.e. two colonies of the same empire",
-                            "Dummy if reporting and partner countries share common legal origins before transition",
-                            "Dummy if reporting and partner countries share common legal origins after transition",
-                            "Dummy if common legal origin changed since transition",
-                            "Legal system of partner country before transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
-                            "Legal system of partner country after transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
-                            "Dummy if partner country is GATT/WTO member",
-                            "Dummy for Regional Trade Agreement",
-                            "Dummy for ACP country exporting to EC/EU member",
-                            "Dummy if origin is donator in Generalized System of Preferences (GSP)",
-                            "Report changes in Rose’s data on <gsp_o_d>. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999",
-                            "Dummy if reporting country a member of the European Union",
-                            "Dummy if partner country a member of the European Union"]
+                           "Standard ISO code for reporting country (three letters)",
+                           "Standard ISO code for partner country (three letters)",
+                           "Dummy for contiguity",
+                           "Dummy if parter country is current or former hegemon of origin",
+                           "Dummy for reporting and partner countries colonial relationship post 1945",
+                           "Dummy for reporting and partner countries ever in colonial relationship",
+                           "Dummy for reporting and partner countries ever in sibling relationship, i.e. two colonies of the same empire",
+                           "Dummy if reporting and partner countries share common legal origins before transition",
+                           "Dummy if reporting and partner countries share common legal origins after transition",
+                           "Dummy if common legal origin changed since transition",
+                           "Legal system of partner country before transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
+                           "Legal system of partner country after transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
+                           "Dummy if partner country is GATT/WTO member",
+                           "Dummy for Regional Trade Agreement",
+                           "Dummy for ACP country exporting to EC/EU member",
+                           "Dummy if origin is donator in Generalized System of Preferences (GSP)",
+                           "Report changes in Rose’s data on <gsp_o_d>. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999",
+                           "Dummy if reporting country a member of the European Union",
+                           "Dummy if partner country a member of the European Union"]
 
-discrete
+discrete.index
 
 
 # Normalization
@@ -264,11 +273,11 @@ data[list(ecdf_normalized_df.columns.values)] = ecdf_normalized_df
 
 # Heatmap
 corr = ecdf_normalized_df.corr()
-sns.heatmap(corr[(corr >= 0.3) | (corr <= -0.3)],
-                cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.05,
-                annot=True, annot_kws={"size": 5}, square=True)
+heat = sns.heatmap(corr[(corr >= 0.3) | (corr <= -0.3)],
+                   cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.05,
+                   annot=True, annot_kws={"size": 5}, square=True)
 
-
+heat.figure.savefig('Heatmap.png', bbox_inches="tight")
 
 # Visualise flows - you can choose two parameters
 scope = 'world'
@@ -276,8 +285,7 @@ scope = 'world'
 flow_treshold = 0.92
 
 
-
-flows = data[['yr','rt3ISO','pt3ISO','Trade_value_total']]
+flows = data[['yr', 'rt3ISO', 'pt3ISO', 'Trade_value_total']]
 data_loc = pd.read_csv(path + "/Data/CountryLatLong.csv")
 data_loc.drop(columns=['Country'], inplace=True)
 data_loc.columns = ["CODE", "rt_Lat", "rt_Long"]
@@ -287,45 +295,44 @@ data_loc.columns = ["CODE", "pt_Lat", "pt_Long"]
 flows = pd.merge(flows, data_loc, left_on="pt3ISO", right_on="CODE").drop('CODE', axis=1)
 
 flow_directions = []
-for i in range( len( flows ) ):
+for i in range(len(flows)):
     if (flows['Trade_value_total'][i] > flow_treshold):
         flow_directions.append(
             dict(
-                type = 'scattergeo',
-                locationmode = 'ISO-3',
-                lon = [ flows['rt_Long'][i], flows['pt_Long'][i]],
-                lat = [ flows['rt_Lat'][i], flows['pt_Lat'][i]],
-                text = flows['pt3ISO'][i],
-                mode = 'lines',
-                line = dict(
-                    width = flows['Trade_value_total'][i] * 10 ,
-                    color = 'blue',
+                type='scattergeo',
+                locationmode='ISO-3',
+                lon=[flows['rt_Long'][i], flows['pt_Long'][i]],
+                lat=[flows['rt_Lat'][i], flows['pt_Lat'][i]],
+                text=flows['pt3ISO'][i],
+                mode='lines',
+                line=dict(
+                    width=flows['Trade_value_total'][i] * 10,
+                    color='blue',
                 ),
                 #opacity = 0,5 * (float(flows['yr'][i])/1994)
-                opacity = np.power(float(flows['yr'][i]) - float(flows['yr'].min()),2)/10/float(np.power(float(flows['yr'].max()- float(flows['yr'].min())),2)),
+                opacity=np.power(float(flows['yr'][i]) - float(flows['yr'].min()), 2)/10/float(np.power(float(flows['yr'].max() - float(flows['yr'].min())), 2)),
             )
         )
 
 
 layout = dict(
-        title = 'Trade flows between Poland and its trading partners.',
-        showlegend = False,
-        geo = dict(
-            scope= scope,
-            projection=dict( type='robinson' ),
-            showland = True,
-            landcolor = 'rgb(243, 243, 243)',
-            countrycolor = 'rgb(204, 204, 204)',
+        title='Trade flows between Poland and its trading partners.',
+        showlegend=False,
+        geo=dict(
+            scope=scope,
+            projection=dict(type='robinson'),
+            showland=True,
+            landcolor='rgb(243, 243, 243)',
+            countrycolor='rgb(204, 204, 204)',
         )
     )
 
-fig = dict( data=flow_directions, layout=layout )
-iplot( fig, filename='Flows map' )
-
+fig = dict(data=flow_directions, layout=layout)
+iplot(fig, filename='Flows map')
 
 # Select only POL as rt3ISO (done twice but does not hurt)
 data_PL = data.query("rt3ISO == 'POL'")
-#data_PL.to_csv("data_PL2.csv")
+# data_PL.to_csv("data_PL2.csv")
 data_PL["year"] = data_PL["yr"]
 data_PL.drop('rt3ISO', axis=1, inplace=True)
 
@@ -335,7 +342,7 @@ data_PL = pd.get_dummies(
     prefix=["yr", "pt3ISO", "legold_d", "legnew_d", "flaggsp_o_d"])
 
 # More general version - does not work for Poland
-#data_PL = pd.get_dummies(
+# data_PL = pd.get_dummies(
 #    data_PL, columns=["year", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
 #    prefix=["yr", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"])
 
@@ -396,7 +403,7 @@ N, D_in, H_in, H_out, D_out = int(data_PL.shape[0]), int((data_PL.shape[1] - 1))
 # nn.Linear modules which are members of the model.
 #criterion = torch.nn.MSELoss(reduction='sum')
 #optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
-#for t in range(5):
+# for t in range(5):
 #    # Forward pass: Compute predicted y by passing x to the model
 #    y_pred = model(x)
 #
