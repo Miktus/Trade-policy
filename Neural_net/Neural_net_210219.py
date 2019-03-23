@@ -61,7 +61,8 @@ data = pd.read_csv(path + "/Data/final_data_trade.csv")
 # Data exploration only for Poland
 
 data = data.loc[data['rt3ISO'] == "POL"]
-max(data['yr'])
+data = data.loc[data['yr'] > 1993]
+min(data['yr'])
 data.shape
 data.columns
 
@@ -168,13 +169,13 @@ if visualise_all:
 # Selected Visualisations
 
 # Histogram of flows over the history
-sns.distplot(np.log(data["Trade_value_total"]), axlabel= "Basic histogram of flows", color="blue")
+sns.distplot(np.log(data["Trade_value_total"] + 1), axlabel= "Basic histogram of flows", color="blue")
 
 # Histograms for chosen years
 years = (1994, 2000, 2009, 2015)
 for i in years:
     plt.figure(i)
-    sns.distplot(np.log(data["Trade_value_total"].loc[data['yr'] == i]), axlabel= "Logarithm of flows in year " +  str(i), color="blue")
+    sns.distplot(np.log(data["Trade_value_total"].loc[data['yr'] == i] + 1), axlabel= "Logarithm of flows in year " +  str(i), color="blue")
 
 # Horizontal alternative, shit doesn't work
 #fig = plt.figure()
@@ -189,7 +190,7 @@ for i in years:
 
 # Pairplot for distance, Trade_value_total and gdp - choose data and if needed logarithms of values
 data_pairplot = data_numeric[["Trade_value_total", "distw", "gdp_d"]]
-#data_pairplot["Trade_value_total"] = np.log(data_pairplot["Trade_value_total"])
+#data_pairplot["Trade_value_total"] = np.log(data_pairplot["Trade_value_total"] + 1)
 #data_pairplot["distw"] = np.log(data_pairplot["distw"])
 #data_pairplot["gdp_d"] = np.log(data_pairplot["gdp_d"])
 sns.pairplot(data_pairplot, vars=["Trade_value_total", "distw", "gdp_d"], kind="scatter", markers=".",  diag_kind="kde",
@@ -324,6 +325,7 @@ iplot( fig, filename='Flows map' )
 
 # Select only POL as rt3ISO (done twice but does not hurt)
 data_PL = data.query("rt3ISO == 'POL'")
+#data_PL.to_csv("data_PL2.csv")
 data_PL["year"] = data_PL["yr"]
 data_PL.drop('rt3ISO', axis=1, inplace=True)
 
@@ -337,7 +339,7 @@ data_PL = pd.get_dummies(
 #    data_PL, columns=["year", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
 #    prefix=["yr", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"])
 
-#data_PL.to_csv("data_PL.csv")
+data_PL.to_csv("data_PL.csv")
 # Splitting the data
 
 # train_size = 0.9
