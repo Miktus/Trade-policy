@@ -29,19 +29,34 @@ RMSE = function(m, o){
 data <- fread(paste0(path,"Data/data_PL.csv"))
 names(data) <- make.names(names(data), unique=TRUE)
 
+# Year variable
+
+year <- data[, 'yr']
+
 # Near zero variance variables
 
 near <- nearZeroVar(data)
-
 data <- data[, -near, with = FALSE]
+
+# Remove highly correlated data
+
+corr = cor(data)
+hc = findCorrelation(corr, cutoff=0.8) # put any value as a "cutoff" 
+hc = sort(hc)
+data = data[, -hc, with = FALSE]
+
+# Add year (just for splitting)
+
+data[, yr := year]
 
 # Data split to compare the reults
 
 data_bef2010 <- data[yr <= 2010]
+# data_bef2010[, yr := NULL]
 data_aft2010 <- data[yr > 2010]
+# data_aft2010[, yr := NULL]
 data_aft2010[, dist_log := log(distw)]
 var <- setdiff(names(data_bef2010), c("Trade_value_total", "distw", "V1", "yr"))
-
 
 # PPML: Poisson Pseudo Maximum Likelihood
 

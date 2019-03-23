@@ -7,7 +7,7 @@
 import plotly.io as pio
 import plotly.graph_objs as go
 import plotly.plotly as py
-from plotly.offline import init_notebook_mode, iplot
+from plotly.offline import init_notebook_mode, iplot, plot
 from matplotlib import pyplot as plt
 from scipy.stats import mstats
 from statsmodels.distributions.empirical_distribution import ECDF
@@ -328,7 +328,8 @@ layout = dict(
     )
 
 fig = dict(data=flow_directions, layout=layout)
-iplot(fig, filename='Flows map')
+plot(fig, filename='Flows map')
+
 
 # Select only POL as rt3ISO (done twice but does not hurt)
 data_PL = data.query("rt3ISO == 'POL'")
