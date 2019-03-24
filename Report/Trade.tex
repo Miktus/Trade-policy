@@ -15,7 +15,6 @@
 \usepackage[polish,english]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-\usepackage{subfigure}
 \usepackage{array}
 \usepackage{etoolbox}
 \usepackage{hyperref}
@@ -35,8 +34,7 @@
 \bibliographystyle{plainnat}
 \usepackage{nameref}
 \usepackage{tabularx}
-\usepackage{array}
-
+\usepackage{subcaption}
 
 \hypersetup{pdfstartview={XYZ null null 1.00}}
 
@@ -153,58 +151,20 @@ The traditional gravity model was developed in the 1960s to explain factory-to-c
 
 Simultaneously, the estimation techniques were progressing, starting from the basic least square estimator and its correspondent panel data version, meaning the fixed effect estimator. The endogeneity issues guided to the establishment of instrumental variables and two step least squares methodologies in the gravity models framework. Nevertheless, all the above-mentioned techniques leaded to the potentially biased results due to the requirement of elimination of the zero trade flows, Therefore, the Poisson Pseudo-Maximum Likelihood model, as well as zero-inflated negative binomial models were proposed and over the years became the flagship framework for the bilateral trade flows estimation.
 
-HERE GOES THE POISSON SHORT DESCRIPTION AND ONE SENTENCE ABOUT FE
+\textcolor{red}{HERE GOES THE POISSON SHORT DESCRIPTION AND ONE SENTENCE ABOUT FE}
 
 \chapter{Data exploration}
 
 For the first part of the data, namely the set of explanatory variables, the CEPII statistics were used, resulting in annual data of 60 variables at the cross country level. Then, using 3 digit ISO codes the dataset was joined with the trade flows information. Nevertheless, in contrary to the first, fully available online dataset, in order to obtain data on flows from Comtrade database, a data scrapper needed to be created. The authors expanded and modified the scrapping function delivered by Comtrade which in the end allowed to bypass all the limitations build into basic API and optimize the time of data scrapping. The exact code can be found in \nameref{Appendix A}. 
 
-The variables used in the calculations, along with their descriptions, are presented in the following table.
+The final variables used in the calculations, along with their descriptions, are presented in the table \nameref{Desc}, while the basic summary statistics are illustrated in the table \nameref{Stats}.
 
-\begin{table}[]
-\centering
-\small{
-\begin{tabularx}{\textwidth}{@{} M X  @{}}
-\toprule
-Variable & Description \\ \midrule
-yr & Year \\ rt3ISO & Standard ISO code for reporting country (three letters) \\
-pt3ISO & Standard ISO code for partner country (three letters) \\
-contig & Dummy for contiguity \\
-heg\_d & Dummy if parter country is current or former hegemon of origin \\
-col\_fr & Dummy for reporting and partner countries colonial relationship post 1945 \\
-colony & Dummy for reporting and partner countries ever in colonial relationship \\
-sibling & Dummy for reporting and partner countries ever in sibling relationship i.e. two colonies of the same empire \\
-comleg\_pretrans & Dummy if reporting and partner countries share common legal origins before transition \\
-comleg\_posttrans & Dummy if reporting and partner countries share common legal origins after transition \\
-transition\_legalchange & Dummy if common legal origin changed since transition \\
-legold\_d & Legal system of partner country before transition. This variable takes the values: fr for French, ge for German, sc for Scandinavian, so for Socialist and uk for British legal origin \\
-legnew\_d & Legal system of partner country after transition. This variable takes the values: fr for French, ge for German, sc for Scandinavian, so for Socialist and uk for British legal origin \\
-gatt\_d & Dummy if partner country is GATT/WTO member \\
-fta\_wto & Dummy for Regional Trade Agreement \\
-eu\_to\_acp & Dummy for ACP country exporting to EC/EU member \\
-gsp\_o\_d & Dummy if origin is donator in Generalized System of Preferences (GSP) \\
-flaggsp\_o\_d & Report changes in Roses data on \textless{}gsp\_o\_d\textgreater{}. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999 \\
-eu\_o & Dummy if reporting country a member of the European Union \\
-eu\_d & Dummy if partner country a member of the European Union \\
-Trade\_value\_total & Total value of trade between reporting and partner countries \\
-distw & Weighted bilateral distance between reporting and partner countries in kilometer (population weighted) \\
-pop\_o & Population of reporting country total in million \\
-pop\_d & Population of partner country total in million \\
-gdp\_o & GDP of reporting country (current US\$) \\
-gdp\_d & GDP of partner country (current US\$) \\
-gdpcap\_o & GDP per capita of reporting country (current US\$) \\
-gdpcap\_d & GDP per capita of partner country (current US\$) \\
-area\_d & Area of partner country in sq. kilometers \\
-tdiff & Time difference between reporting and partner countries in number of hours. For countries which stretch over more than  one  time  zone   the  respective  time  zone  is generated via the mean of all its time zones (for instance: Russia, Canada, USA) \\
-comrelig & Religious proximity (\citet{disdier2007je}) is an index calculated by adding the products of the shares of Catholics, Protestants and Muslims in the exporting and importing countries. It is bounded between 0 and 1 and is maximum if the country pair has a religion which (1) comprises a vast majority of the population and (2) is the same in both countries. \\ \bottomrule
-\end{tabularx}}
-\end{table}
+\newpage 
 
-The summary statistics:
-
-\begin{sidewaystable}
+\begin{sidewaystable}[ph!]
     \centering
-    \caption{Your caption here}
+    \caption[Summary statistics]{Summary statistics}
+    \label{Stats}
 \tiny{
 \begin{tabularx}{\textwidth}{@{} L *{12}{Y}  @{}}
 \toprule
@@ -259,11 +219,136 @@ gsp\_d\_d & 4060.00 & NaN & NaN & NaN & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 
 flaggsp\_o\_d & 4060.00 & 3 & no gsp recorded in Rose & 3099 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\
 flaggsp\_d\_d & 4060.00 & 1 & no gsp recorded in Rose & 4060 & NaN & NaN & NaN & NaN & NaN & NaN & NaN & NaN \\ \bottomrule
 \end{tabularx}}
+\caption*{\tiny{Where the columns denote respectively the variables described, the number of observations, the amount of unique values, the most frequent value (for categorical variables), the frequency of the most frequent value, the mean, the standard deviation, the minimum value, the first quantile, the median, the third quantile, the maximum value and finally the coefficient of variation.}}
 \end{sidewaystable}
+
+\newpage
+
+\begin{table}[H]
+\centering
+\caption[Variables and their description]{Variables and their description} \label{Desc}
+\small{
+\begin{tabularx}{\textwidth}{@{} M X  @{}}
+\toprule
+Variable & Description \\ \midrule
+yr & Year \\ rt3ISO & Standard ISO code for reporting country (three letters) \\
+pt3ISO & Standard ISO code for partner country (three letters) \\
+contig & Dummy for contiguity \\
+heg\_d & Dummy if parter country is current or former hegemon of origin \\
+col\_fr & Dummy for reporting and partner countries colonial relationship post 1945 \\
+colony & Dummy for reporting and partner countries ever in colonial relationship \\
+sibling & Dummy for reporting and partner countries ever in sibling relationship i.e. two colonies of the same empire \\
+comleg\_pretrans & Dummy if reporting and partner countries share common legal origins before transition \\
+comleg\_posttrans & Dummy if reporting and partner countries share common legal origins after transition \\
+transition\_legalchange & Dummy if common legal origin changed since transition \\
+legold\_d & Legal system of partner country before transition. This variable takes the values: fr for French, ge for German, sc for Scandinavian, so for Socialist and uk for British legal origin \\
+legnew\_d & Legal system of partner country after transition. This variable takes the values: fr for French, ge for German, sc for Scandinavian, so for Socialist and uk for British legal origin \\
+gatt\_d & Dummy if partner country is GATT/WTO member \\
+fta\_wto & Dummy for Regional Trade Agreement \\
+eu\_to\_acp & Dummy for ACP country exporting to EC/EU member \\
+gsp\_o\_d & Dummy if origin is donator in Generalized System of Preferences (GSP) \\
+flaggsp\_o\_d & Report changes in Roses data on \textless{}gsp\_o\_d\textgreater{}. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999 \\
+eu\_o & Dummy if reporting country a member of the European Union \\
+eu\_d & Dummy if partner country a member of the European Union \\
+Trade\_value\_total & Total value of trade between reporting and partner countries \\
+distw & Weighted bilateral distance between reporting and partner countries in kilometer (population weighted) \\
+pop\_o & Population of reporting country total in million \\
+pop\_d & Population of partner country total in million \\
+gdp\_o & GDP of reporting country (current US\$) \\
+gdp\_d & GDP of partner country (current US\$) \\
+gdpcap\_o & GDP per capita of reporting country (current US\$) \\
+gdpcap\_d & GDP per capita of partner country (current US\$) \\
+area\_d & Area of partner country in sq. kilometers \\
+tdiff & Time difference between reporting and partner countries in number of hours. For countries which stretch over more than  one  time  zone   the  respective  time  zone  is generated via the mean of all its time zones (for instance: Russia, Canada, USA) \\
+comrelig & Religious proximity (\citet{disdier2007je}) is an index calculated by adding the products of the shares of Catholics, Protestants and Muslims in the exporting and importing countries. It is bounded between 0 and 1 and is maximum if the country pair has a religion which (1) comprises a vast majority of the population and (2) is the same in both countries. \\ \bottomrule
+\end{tabularx}}
+\end{table}
+
+\newpage
+
+Furthermore, due to the fact that the authors concentrated their attention on the trade flows of Poland with its partner, the following graphs demonstrate that Poland mainly trades with Unites States, China and Europe.
+
+\begin{figure}[H]
+        \centering
+        \begin{subfigure}[b]{0.475\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Flows}
+\caption[Trade flows between Poland and its world trading partners]{Trade flows between Poland and its world trading partners}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.475\textwidth}  
+            \centering 
+            \includegraphics[width=\textwidth]{Flows_Europe}
+\caption[Trade flows between Poland and its European trading partners]{Trade flows between Poland and its European trading partners}
+        \end{subfigure}
+\caption[Trade flows between Poland and its trading partners]{Trade flows between Poland and its trading partners}
+\end{figure}
+
+Moreover, the histogram of standarized trade flows of Poland from 1994 to 2015 certifies that there is a relatively large group of countries with which Poland is not involved in trading relations. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Histogram_of_flows_over_the_history}
+\caption[Histogram of flows over the history]{Histogram of flows over the history (overall)}
+\end{figure} 
+
+\newpage
+
+The aforementioned fact it complemented with the histograms in specific years: 1994, 2000, 2009 and 2015. However, it can be noticed that the amount of trading partners was gradually increasing over time.
+
+\begin{figure}[H]
+        \centering
+        \begin{subfigure}[b]{0.475\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Histogram1994}
+            \caption[Histogram of flows in 1994]%
+            {{\small Histogram of flows in 1994}}    
+            \label{hist1994}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.475\textwidth}  
+            \centering 
+            \includegraphics[width=\textwidth]{Histogram2000}
+             \caption[Histogram of flows in 2000]%
+            {{\small Histogram of flows in 2000}}    
+            \label{hist2000}
+        \end{subfigure}
+        \vskip\baselineskip
+        \begin{subfigure}[b]{0.475\textwidth}   
+            \centering 
+            \includegraphics[width=\textwidth]{Histogram2009}
+             \caption[Histogram of flows in 2009]%
+            {{\small Histogram of flows in 2009}}    
+            \label{hist2009}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[b]{0.475\textwidth}   
+            \centering 
+            \includegraphics[width=\textwidth]{Histogram2015}
+             \caption[Histogram of flows in 2015]%
+            {{\small Histogram of flows in 2015}}    
+            \label{hist2015}
+        \end{subfigure}
+        \caption[Histogram of flows in specific years]
+        {\small Histogram of flows in specific years} 
+        \label{hist_specific}
+    \end{figure}
+
+Finally, as the main interest of the following paper is the gravity model, the relations between total trade value, distance and partner country's GDP (standarized) are demonstrated in the pairplots graphs.
+
+\newpage
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Pairplots}
+\caption[Pairplots]{Pairplots between total trade value, distance and partner country's GDP (standarized)}
+\end{figure} 
+
+Accordingly to the intuition, the value of trade is lower for the more distanced countries, while on contrary it seems to be positively correlated with the trading country's gross domestic product, which can be regarded as the proxy for the nation's size.
 
 \chapter{Neural network approach}
 
-The neural networks approach is a statistical framework allowing to find complex patterns of relations in the data. The intuition behind the above-mentioned concept is often compared to the way of how human nerve system functions. In a nutshell, it can be characterized as follows - in the first phase the external signal is received by receptors and transfered to the set of neurons. Then, during further stages, it is iteratively processed and passed to next set of neurons until the signal is finally decoded. The structure of the neural network model similarly compounds of 3 elements: the input layer of independent variables, set of "hidden layers” and finally the output layer with calculated results of a model. Given the structure, in each phase besides the last one, the values of nodes from former layer are affinely transformed and then nonlinear function in performed in order to obtain the values for each node of a new layer. The calculations are repeated until the last phase when the final value is accessed through a nonlinear function of affine product of nodes from previous layers. The aforementioned process, starting from an input data and aiming to compute the output, is called the \textit{forward propagation} and can be seen as a function of coefficients coined within every single affine transformation taking place between all neighbouring layers.
+The neural networks approach is a statistical framework allowing to find complex patterns of relations in the data. The intuition behind the above-mentioned concept is often compared to the way of how human nerve system functions. In a nutshell, it can be characterized as follows - in the first phase the external signal is received by receptors and transferred to the set of neurons. Then, during further stages, it is iteratively processed and passed to next set of neurons until the signal is finally decoded. The structure of the neural network model similarly compounds of 3 elements: the input layer of independent variables, set of "hidden layers” and finally the output layer with calculated results of a model. Given the structure, in each phase besides the last one, the values of nodes from former layer are affinely transformed and then nonlinear function in performed in order to obtain the values for each node of a new layer. The calculations are repeated until the last phase when the final value is accessed through a nonlinear function of affine product of nodes from previous layers. The aforementioned process, starting from an input data and aiming to compute the output, is called the \textit{forward propagation} and can be seen as a function of coefficients coined within every single affine transformation taking place between all neighbouring layers.
 
 As a result, the estimated trade flows from the neural network approach rely on finding the appropriate values of parameters under arbitrary selected structure of a model. Thus in the first stage, the values of the coefficients are randomly assigned and then the forward propagation is performed. Next, based on model’s output and true values of the observable dependent variable, the arbitrary chosen loss function is calculated. It has to be underlined that due to the fact that the generated output is a result of forward propagation, the loss function can be also defined as a function of the same parameters. It allows to compute a derivative with respect to them and in the end, to recalibrate their values – such a process is called  \textit{backward propagation} and it is iteratively repeated together with forward propagation to minimize the loss function, optimizing the values of parameters. 
 
@@ -334,6 +419,8 @@ N & First  & Hidden & Batch & Epochs & Dropout & Opt & Losses & Activation \\ \m
 
 Here goes the conclusion.
 
+\textcolor{red}{REMEMBER TO CHANGE CODES}
+
 \newpage
 
 \nocite{*}
@@ -353,6 +440,18 @@ Here goes the conclusion.
 \lstinputlisting{Neural_net.py}
 
 \newpage
+
+\chapter*{Appendix C} \label{Appendix C}
+\addcontentsline{toc}{chapter}{Appendix C}
+
+\lstinputlisting{DataCleaning.R}
+
+\newpage
+
+\chapter*{Appendix D} \label{Appendix D}
+\addcontentsline{toc}{chapter}{Appendix D}
+
+\lstinputlisting{Gravity.R}
 
 
 \end{document}
