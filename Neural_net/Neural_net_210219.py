@@ -52,8 +52,8 @@ plt.style.use("seaborn")
 init_notebook_mode(connected=True)
 
 # Path specifiation
-path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
-# path = "C:/Repo/Trade/Trade-policy/"
+#path = "/Users/miktus/Documents/PSE/Trade policy/Model/"
+path = "C:/Repo/Trade/Trade-policy/"
 
 # Import data
 
@@ -117,6 +117,55 @@ data.drop(columns=['iso2_d', 'iso2_o'], inplace=True)
 
 data = data.query("rt3ISO == 'POL'")
 
+# Summary statistics table
+values = pd.DataFrame(data.nunique(0), columns=["count"])
+values["column"] = values.index
+keep = values["column"].loc[values["count"] > 1]
+data = data[data.columns.intersection(list(keep.append(pd.Series(["rt3ISO"]))))]
+values = pd.DataFrame(data.nunique(0), columns=["count"])
+values["column"] = values.index
+discrete = values["column"].loc[values["count"] <= 10]
+continues = values["column"].loc[values["count"] > 10]
+continues = pd.DataFrame(data[data.columns.intersection(list(continues.drop(["pt3ISO", "yr"])))].describe(include='all').transpose())
+continues["Description"] = ["Total value of trade between reporting and partner countries",
+                            "Weighted bilateral distance between reporting and partner countries in kilometer (population weighted)",
+                            "Population of reporting country, total in million",
+                            "Population of partner country, total in million",
+                            "GDP of reporting country (current US$)",
+                            "GDP of partner country (current US$)",
+                            "GDP per capita of reporting country (current US$)",
+                            "GDP per capita of partner country (current US$)",
+                            "Area of partner country in sq. kilometers",
+                            "Time difference between reporting and partner countries, in number of hours. For countries which stretch over more than  one  time  zone,  the  respective  time  zone  is generated via the mean of all its time zones (for instance: Russia, Canada, USA)",
+                            "Religious proximity (Disdier and Mayer, 2007) is an index calculated by adding the productsof the shares of Catholics, Protestants and Muslims in the exporting and importing countries. It is bounded between 0 and 1, and is maximum if the country pair has a religion which (1) comprises a vast majority of the population, and (2) is the same in both countries. Source of religion shares: LaPorta, Lopez-de-Silanes, Shleiferand Vishny(1999), completed with the CIA world factbook"]
+
+# Final table for continues variables
+pd.DataFrame(continues[continues.columns.drop(["count"])]).style.format({'total_amt_usd_pct_diff': "{:.2%}"})
+
+discrete = pd.DataFrame(data[data.columns.intersection(list(discrete.append(pd.Series(["yr", "pt3ISO"]))))]).apply(lambda r: pd.Series({'Count': r.nunique(), 'Most Common Value': str(mode(r)[0]).replace("[", "").replace("]", "").replace(".", "")})).transpose()
+discrete["Description"] = ["Year",
+                           "Standard ISO code for reporting country (three letters)",
+                           "Standard ISO code for partner country (three letters)",
+                           "Dummy for contiguity",
+                           "Dummy if parter country is current or former hegemon of origin",
+                           "Dummy for reporting and partner countries colonial relationship post 1945",
+                           "Dummy for reporting and partner countries ever in colonial relationship",
+                           "Dummy for reporting and partner countries ever in sibling relationship, i.e. two colonies of the same empire",
+                           "Dummy if reporting and partner countries share common legal origins before transition",
+                           "Dummy if reporting and partner countries share common legal origins after transition",
+                           "Dummy if common legal origin changed since transition",
+                           "Legal system of partner country before transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
+                           "Legal system of partner country after transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
+                           "Dummy if partner country is GATT/WTO member",
+                           "Dummy for Regional Trade Agreement",
+                           "Dummy for ACP country exporting to EC/EU member",
+                           "Dummy if origin is donator in Generalized System of Preferences (GSP)",
+                           "Report changes in Rose’s data on <gsp_o_d>. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999",
+                           "Dummy if reporting country a member of the European Union",
+                           "Dummy if partner country a member of the European Union"]
+
+discrete.index
+
 # Numeric variables
 
 data_numeric = data._get_numeric_data()
@@ -172,7 +221,7 @@ if visualise_all:
 
 # Histogram of flows over the history
 
-hist_all = sns.distplot(np.log(data["Trade_value_total"] + 1), axlabel="Basic histogram of flows", color="blue")
+hist_all = sns.distplot(np.log(data["Trade_value_total"] + 1), axlabel="Logarithm of flows", color="blue")
 
 
 hist_all.figure.savefig('Histogram of flows over the history.png', bbox_inches="tight")
@@ -205,56 +254,20 @@ pairplot = sns.pairplot(data_pairplot, vars=["Trade_value_total", "distw", "gdp_
                         plot_kws=dict(s=50, edgecolor="blue", linewidth=1),  diag_kws=dict(shade=True,  color="blue"))
 pairplot.savefig('Pairplots.png', bbox_inches="tight")
 
+# Save copy of nostandardized dataset
+data_nonstandardized  = data
 
-# Summary statistics table
-values = pd.DataFrame(data.nunique(0), columns=["count"])
-values["column"] = values.index
-keep = values["column"].loc[values["count"] > 1]
-data = data[data.columns.intersection(list(keep.append(pd.Series(["rt3ISO"]))))]
-values = pd.DataFrame(data.nunique(0), columns=["count"])
-values["column"] = values.index
-discrete = values["column"].loc[values["count"] <= 10]
-continues = values["column"].loc[values["count"] > 10]
-continues = pd.DataFrame(data[data.columns.intersection(list(continues.drop(["pt3ISO", "yr"])))].describe(include='all').transpose())
-continues["Description"] = ["Total value of trade between reporting and partner countries",
-                            "Weighted bilateral distance between reporting and partner countries in kilometer (population weighted)",
-                            "Population of reporting country, total in million",
-                            "Population of partner country, total in million",
-                            "GDP of reporting country (current US$)",
-                            "GDP of partner country (current US$)",
-                            "GDP per capita of reporting country (current US$)",
-                            "GDP per capita of partner country (current US$)",
-                            "Area of partner country in sq. kilometers",
-                            "Time difference between reporting and partner countries, in number of hours. For countries which stretch over more than  one  time  zone,  the  respective  time  zone  is generated via the mean of all its time zones (for instance: Russia, Canada, USA)",
-                            "Religious proximity (Disdier and Mayer, 2007) is an index calculated by adding the productsof the shares of Catholics, Protestants and Muslims in the exporting and importing countries. It is bounded between 0 and 1, and is maximum if the country pair has a religion which (1) comprises a vast majority of the population, and (2) is the same in both countries. Source of religion shares: LaPorta, Lopez-de-Silanes, Shleiferand Vishny(1999), completed with the CIA world factbook"]
+data_PL_nonstd = data_nonstandardized.query("rt3ISO == 'POL'")
+# data_PL.to_csv("data_PL2.csv")
+data_PL_nonstd["year"] = data_PL_nonstd["yr"]
+data_PL_nonstd.drop('rt3ISO', axis=1, inplace=True)
 
-# Final table for continues variables
-pd.DataFrame(continues[continues.columns.drop(["count"])]).style.format({'total_amt_usd_pct_diff': "{:.2%}"})
+# One hot encoding
+data_PL_nonstd = pd.get_dummies(
+    data_PL_nonstd, columns=["year", "pt3ISO", "legold_d", "legnew_d", "flaggsp_o_d"],
+    prefix=["yr", "pt3ISO", "legold_d", "legnew_d", "flaggsp_o_d"])
 
-discrete = pd.DataFrame(data[data.columns.intersection(list(discrete.append(pd.Series(["yr", "pt3ISO"]))))]).apply(lambda r: pd.Series({'Count': r.nunique(), 'Most Common Value': str(mode(r)[0]).replace("[", "").replace("]", "").replace(".", "")})).transpose()
-discrete["Description"] = ["Year",
-                           "Standard ISO code for reporting country (three letters)",
-                           "Standard ISO code for partner country (three letters)",
-                           "Dummy for contiguity",
-                           "Dummy if parter country is current or former hegemon of origin",
-                           "Dummy for reporting and partner countries colonial relationship post 1945",
-                           "Dummy for reporting and partner countries ever in colonial relationship",
-                           "Dummy for reporting and partner countries ever in sibling relationship, i.e. two colonies of the same empire",
-                           "Dummy if reporting and partner countries share common legal origins before transition",
-                           "Dummy if reporting and partner countries share common legal origins after transition",
-                           "Dummy if common legal origin changed since transition",
-                           "Legal system of partner country before transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
-                           "Legal system of partner country after transition. This variable takes the values: “fr” for French, “ge” for German, “sc” for Scandinavian, “so” for Socialist and “uk” for British legal origin.",
-                           "Dummy if partner country is GATT/WTO member",
-                           "Dummy for Regional Trade Agreement",
-                           "Dummy for ACP country exporting to EC/EU member",
-                           "Dummy if origin is donator in Generalized System of Preferences (GSP)",
-                           "Report changes in Rose’s data on <gsp_o_d>. No gsp recorded in Rose; Data directly from Rose; Changes in data from Rose; Assumption that gsp continues after 1999",
-                           "Dummy if reporting country a member of the European Union",
-                           "Dummy if partner country a member of the European Union"]
-
-discrete.index
-
+data_PL_nonstd.to_csv("data_PL.csv")
 
 # Normalization
 minmax_normalized_df = pd.DataFrame(MinMaxScaler().fit_transform(data_numeric),
@@ -266,13 +279,12 @@ standardized_df = pd.DataFrame(StandardScaler().fit_transform(data_numeric), col
 ecdf_normalized_df = data_numeric.apply(
     lambda c: pd.Series(ECDF(c)(c), index=c.index))
 
-# Replace data by its standardized values
-
-data[list(ecdf_normalized_df.columns.values)] = ecdf_normalized_df
+# Continue with standardized data for neural network
+data[list(standardized_df.columns.values)] = standardized_df
 
 
 # Heatmap
-corr = ecdf_normalized_df.corr()
+corr = standardized_df.corr()
 heat = sns.heatmap(corr[(corr >= 0.3) | (corr <= -0.3)],
                    cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.05,
                    annot=True, annot_kws={"size": 5}, square=True)
@@ -331,7 +343,7 @@ fig = dict(data=flow_directions, layout=layout)
 plot(fig, filename='Flows map')
 
 
-# Select only POL as rt3ISO (done twice but does not hurt)
+# Select only POL as rt3ISO
 data_PL = data.query("rt3ISO == 'POL'")
 # data_PL.to_csv("data_PL2.csv")
 data_PL["year"] = data_PL["yr"]
@@ -347,7 +359,6 @@ data_PL = pd.get_dummies(
 #    data_PL, columns=["year", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"],
 #    prefix=["yr", "pt3ISO", "legold_o", "legold_d", "legnew_o", "legnew_d", "flaggsp_o_d", "flaggsp_d_d"])
 
-data_PL.to_csv("data_PL.csv")
 # Splitting the data
 
 # train_size = 0.9
