@@ -499,6 +499,18 @@ params_small = {'lr': (0.5, 5, 2),
                 'losses': [mse],
                 'activation': [relu]}
 
+params_final = {'lr': {0.0001, 0.001, 0.01},
+                'l1': {1.0000000, 0.7943282, 0.6309573, 0.5011872, 0.3981072, 0.3162278, 0.2511886, 0.1995262, 0.1584893, 0.1258925, 0.1000000, 0}
+                'l2': {1.0000000, 0.7943282, 0.6309573, 0.5011872, 0.3981072, 0.3162278, 0.2511886, 0.1995262, 0.1584893, 0.1258925, 0.1000000, 0}
+                'first_neuron': {4, 8, 16, 32},
+                'hidden_layer()s': {0, 1, 2},
+                'batch_size': {32, 64, 128, 256},
+                'epochs': {1000},
+                'dropout': {0, 0.1, 0.2, 0.3, 0.4, 0.5},
+                'optimizer': {Adam, SGD},
+                'losses': [mse],
+                'activation': {relu, sigmoid}}
+
 # Run the experiment
 
 os.chdir(path + "/Data/")
@@ -508,6 +520,6 @@ t = ta.Scan(x=x_train,
             model=build_model,
             grid_downsample=1,
             val_split=0.3,
-            params=params,
+            params=params_final,
             dataset_name='POL',
-            experiment_no='2')
+            experiment_no='final')
