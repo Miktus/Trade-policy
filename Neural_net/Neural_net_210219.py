@@ -370,6 +370,7 @@ x_train = data_PL.drop('yr', axis=1).drop('Trade_value_total', axis=1).loc[data_
 y_train = data_PL.loc[:, 'Trade_value_total'].loc[data_PL['yr'] <= splitting_yr].values
 x_test = data_PL.drop('yr', axis=1).drop('Trade_value_total', axis=1).loc[data_PL['yr'] > splitting_yr].values
 y_test = data_PL.loc[:, 'Trade_value_total'].loc[data_PL['yr'] > splitting_yr].values
+sns.distplot(y_train, axlabel="Logarithm of flows", color="blue")
 
 # Build NN class in PyTorch
 
@@ -462,7 +463,8 @@ def build_model(x_train, y_train, x_val, y_val, params):
                         validation_data=[x_val, y_val],
                         batch_size=params['batch_size'],
                         epochs=params['epochs'],
-                        callbacks=[early_stopper(epochs=params['epochs'], mode='strict')],
+                        callbacks=[early_stopper(epochs=params['epochs'], mode='moderate')],
+                        #callbacks=[early_stopper(epochs=params['epochs'], mode='strict')],
                         verbose=0)
 
     # Finally we have to make sure that history object and model are returned
@@ -486,30 +488,30 @@ params = {'lr': (0.5, 4, 4),
 # Alternatively small parameters space
 
 
-params_small = {'lr': (0.5, 5, 2),
-                'l1': (0.1, 50, 2),
-                'l2': (0.1, 50, 2),
-                'first_neuron': [4],
-                'l1': (0.1, 50, 2),
-                'hidden_layer()s': [0],
-                'batch_size': [32],  # [32, 64, 128, 256],
-                'epochs': [100],
-                'dropout': (0, 0.5, 2),
-                'optimizer': [Adam],
-                'losses': [mse],
-                'activation': [relu]}
+params = {'lr': {0.01, 0.1, 0.5},
+        'l1': {0.1995262, 0.1584893, 0.1258925, 0.1000000, 0},
+        'l2': {0.1995262, 0.1584893, 0.1258925, 0.1000000, 0},
+        'first_neuron': {4, 8, 16, 32},
+        'hidden_layers': {1, 2},
+        'batch_size': {32, 64, 128},
+        'epochs': {250},
+        'dropout': {0, 0.1, 0.2, 0.3, 0.4},
+        'optimizer': {Adam, SGD},
+        'losses': [mse],
+        'activation': {relu, sigmoid}}
 
-params_final = {'lr': {0.0001, 0.001, 0.01},
-                'l1': {1.0000000, 0.7943282, 0.6309573, 0.5011872, 0.3981072, 0.3162278, 0.2511886, 0.1995262, 0.1584893, 0.1258925, 0.1000000, 0}
-                'l2': {1.0000000, 0.7943282, 0.6309573, 0.5011872, 0.3981072, 0.3162278, 0.2511886, 0.1995262, 0.1584893, 0.1258925, 0.1000000, 0}
-                'first_neuron': {4, 8, 16, 32},
-                'hidden_layer()s': {0, 1, 2},
-                'batch_size': {32, 64, 128, 256},
-                'epochs': {1000},
-                'dropout': {0, 0.1, 0.2, 0.3, 0.4, 0.5},
-                'optimizer': {Adam, SGD},
+
+params_final = {'lr': {0.01},
+                'l1': {0},
+                'l2': {0},
+                'first_neuron': {32},
+                'hidden_layers': {1, 2},
+                'batch_size': {32, 128},
+                'epochs': {100000},
+                'dropout': {0},
+                'optimizer': {Adam},
                 'losses': [mse],
-                'activation': {relu, sigmoid}}
+                'activation': {relu}}
 
 # Run the experiment
 
@@ -517,9 +519,9 @@ os.chdir(path + "/Data/")
 
 t = ta.Scan(x=x_train,
             y=y_train,
-            model=build_model,
+            model = build_model,
             grid_downsample=1,
             val_split=0.3,
             params=params_final,
             dataset_name='POL',
-            experiment_no='final')
+            experiment_no='final_enhanced')
