@@ -1,5 +1,6 @@
 # Code for the Trade Policy class at PSE
 # Author: Michal Miktus at michal.miktus@gmail.com
+# Mateusz Szmidt at mateuszszmidt95@gmail.com
 # Date: 23.02.2019
 
 
@@ -78,7 +79,9 @@ MSE <- mean(sum(residuals^2)/length(unlist(residuals)))
 # Summary to latex
 
 
-stargazer(PPML)
+
+(summary(PPML))
+
 # FE ----------------------------------------------------
 # Left just in case - to be removed in final version
 fe <- F

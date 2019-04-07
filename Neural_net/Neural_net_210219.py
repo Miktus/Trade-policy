@@ -501,7 +501,7 @@ params = {'lr': {0.01, 0.1, 0.5},
         'activation': {relu, sigmoid}}
 
 
-params_final = {'lr': {0.01},
+params_final = {'lr': {0.001},
                 'l1': {0},
                 'l2': {0},
                 'first_neuron': {32},
@@ -524,4 +524,4 @@ t = ta.Scan(x=x_train,
             val_split=0.3,
             params=params_final,
             dataset_name='POL',
-            experiment_no='final_enhanced')
+            experiment_no='final_more_enhanced')

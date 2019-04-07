@@ -224,7 +224,7 @@ flaggsp\_d\_d & 4060.00 & 1 & no gsp recorded in Rose & 4060 & NaN & NaN & NaN &
 \end{sidewaystable}
 
 \newpage
-
+\thispagestyle{empty}
 \begin{table}[H]
 \centering
 \caption[Variables and their description]{Variables and their description} \label{Desc}
@@ -381,40 +381,97 @@ At this stage all the elements of model architecture are defined, allowing to im
 
 \chapter{Results}
 
-As far as the main outcomes from the trade flows prediction through a neural network approach are concerned, the best performing ten models are presented in the following \nameref{Results} Table.
+Fixed effect, dummy na rok, nie dajemy fixed effect, ale są możliwe na rządanie, , wypierdalamy bo colinearity socjo niesistotne ale 
 
-\begin{table}[!htp] \label{Results}
+
+\begin{table}[H]
+\centering
+\caption{Results of Poisson Pseudo-Maximum Likelihood estimation}
+\begin{tabular}{ccccc}
+  \hline
+ & Estimate & Std. Error & t value & Pr($>$$|$t$|$) \\ 
+  \hline
+Intercept & 54.8905 & 20.4869 & 2.68 & 0.0074 \\ 
+  dist\_log & -4.6382 & 2.5546 & -1.82 & 0.0695 \\ 
+  comrelig & 1.7794 & 5.4022 & 0.33 & 0.7419 \\ 
+  gatt\_d & 0.5378 & 0.0527 & 10.20 & 0.0000 \\  
+  legnew\_d\_so & 1.3770 & 2.7106 & 0.51 & 0.6115 \\ 
+   \hline
+& & & Degrees of Freedom: & \\
+& & & & 3148 Total \\
+& & & & 2947 Residual \\
+& & & Null Deviance:	  &  1.211e+13 \\
+& & & Residual Deviance: & 2.351e+11 	\\
+\hline
+\end{tabular}
+\caption*{\tiny{CHUJ, kody odswiezyc}}
+\end{table}
+
+
+The following parameter space was considered during the estimation procedure:\\ \\
+params = \{lr: \{0.01, 0.1, 0.5\},
+        l1: \{0.1995262, 0.1584893, 0.1258925, 0.1000000, 0\},
+        l2: \{0.1995262, 0.1584893, 0.1258925, 0.1000000, 0\},
+        first\_neuron: \{4, 8, 16, 32\},
+        hidden\_layers: \{1, 2\},
+        batch\_size: \{32, 64, 128\},
+        epochs: \{250\},
+        dropout: \{0, 0.1, 0.2, 0.3, 0.4\},
+        optimizer: \{Adam, SGD\},
+        losses: \{mse\},
+        activation: \{relu, sigmoid\}\} \\
+
+
+As far as the main outcomes from the trade flows prediction through a neural network approach are concerned, the best performing ten models are presented in the following \nameref{Results} Table. 
+
+\begin{table}[H] \label{Results}
 \footnotesize{
 \centering
 \caption{Results of neural network}
 \begin{tabular}{*{9}{c}}
 \toprule
 N & N\_iter & Val\_loss & Val\_MSE & Loss & MSE & LR & L1 & L2 \\ \midrule
-1 & 250 & 2,865 & 0,077 & 2,889 & 0,079 & 0,5 & 0,1 & 20,05 \\
-2 & 202 & 1,528 & 0,078 & 1,542 & 0,079 & 0,5 & 10075 & 10075 \\
-3 & 37 & 1,500 & 0,074 & 1,518 & 0,079 & 0,5 & 10075 & 10075\\
-4 & 75 & 0,099 & 0,078 & 0,100 & 0,080 & 0,5 & 0,1 & 10075 \\
-5 & 201 & 1,567 & 0,078 & 1,598 & 0,080 & 0,5 & 10075 & 20,05 \\
-6 & 41 & 0,466 & 0,079 & 0,468 & 0,080 & 3125 & 0,1 & 0,1\\
-7 & 174 & 0,107 & 0,079 & 0,108 & 0,080 & 0,5 & 0,1 & 30025 \\
-8 & 250 & 1,026 & 0,079 & 1,032 & 0,081 & 0,5 & 0,1 & 10075 \\
-9 & 129 & 0,677 & 0,080 & 0,679 & 0,081 & 0,5 & 0,1 & 0,1 \\
-10 & 65 & 0,379 & 0,080 & 0,381 & 0,081 & 1375 & 0,1 & 0,1 \\ \bottomrule
+1  & 38            & 0.176     & 0.176                     & 0.037 & 0.037                & 0.5 & 0.000 & 0.000 \\
+2  & 61            & 0.197     & 0.197                     & 0.04  & 0.04                 & 0.5 & 0.000 & 0.000 \\
+3  & 38            & 0.224     & 0.224                     & 0.046 & 0.046                & 0.5 & 0.000 & 0.000 \\
+4  & 185           & 0.249     & 0.249                     & 0.041 & 0.041                & 0.1 & 0.000 & 0.000 \\
+5  & 40            & 0.252     & 0.252                     & 0.043 & 0.043                & 0.5 & 0.000 & 0.000 \\
+6  & 102           & 0.364     & 0.364                     & 0.07  & 0.07                 & 0.1 & 0.000 & 0.000 \\
+7  & 47            & 0.465     & 0.465                     & 0.065 & 0.065                & 0.5 & 0.000 & 0.000 \\
+8  & 22            & 0.624     & 0.496                     & 0.214 & 0.093                & 0.5 & 0.000 & 0.158 \\
+9  & 86            & 0.509     & 0.509                     & 0.103 & 0.103                & 0.1 & 0.000 & 0.000 \\
+10 & 12            & 0.635     & 0.513                     & 0.216 & 0.099                & 0.5 & 0.000 & 0.100 \\ \bottomrule
 & & & & & & & &  \\
 N & First  & Hidden & Batch & Epochs & Dropout & Opt & Losses & Activation \\ \midrule
-1 & 4 & 1 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
-2 & 8 & 1 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
-3 & 4 & 1 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
-4 & 16 & 1 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
-5 & 4 & 1 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
-6 & 4 & 2 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
-7 & 4 & 2 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
-8 & 4 & 1 & 64 & 250 & 0,000 &   Adam & MSE & relu \\
-9 & 8 & 2 & 32 & 250 & 0,000 &   Adam & MSE & relu \\
-10 & 4 & 2 & 64 & 250 & 0,000 &   Adam & MSE & relu \\ \bottomrule
+1  & 32            & 1              & 32          & 250    & 0       & Adam      & MSE    & relu       \\
+2  & 8             & 2              & 128         & 250    & 0       & Adam      & MSE    & relu       \\
+3  & 8             & 1              & 32          & 250    & 0       & Adam      & MSE    & relu       \\
+4  & 16            & 2              & 128         & 250    & 0       & Adam      & MSE    & relu       \\
+5  & 32            & 1              & 64          & 250    & 0       & Adam      & MSE    & relu       \\
+6  & 32            & 1              & 64          & 250    & 0       & Adam      & MSE    & relu       \\
+7  & 8             & 1              & 128         & 250    & 0       & Adam      & MSE    & relu       \\
+8  & 32            & 2              & 64          & 250    & 0       & Adam      & MSE    & relu       \\
+9  & 32            & 1              & 32          & 250    & 0,1     & Adam      & MSE    & relu       \\
+10 & 32            & 2              & 32          & 250    & 0       & Adam      & MSE    & relu      \\ \bottomrule
 \end{tabular}
-\caption*{\small{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, maximum number of epochs, dropout, optimizer, losses, activation function;}}}
+\caption*{\tiny{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, maximum number of epochs, dropout, optimizer, losses, activation function;}}}
 \end{table}
+
+Based on the aforementioned outcomes, the parameters space was restricted to: \\ \\
+params\_final= \{lr: \{0.01\},
+        l1: \{0\},
+        l2: \{0\},
+        first\_neuron: \{32\},
+        hidden\_layers: \{1, 2\},
+        batch\_size: \{32, 128\},
+        epochs: \{100000\},
+        dropout: \{0\},
+        optimizer: \{Adam\},
+        losses: \{mse\},
+        activation: \{relu\}\}\
+ 
+
+Working paper dodać, partrząc na wyniki, ale dla estymacji (2h trwa jedna)
 
 \chapter{Concluding remarks} \label{Concluding remarks}
 
