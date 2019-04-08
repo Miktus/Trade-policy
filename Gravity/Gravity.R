@@ -4,7 +4,7 @@
 
 
 #path <- '/Users/miktus/Documents/PSE/Trade policy/Model/'
-path <- 'C:/Repo/Trade/Trade-policy/'
+path <- 'C:/Users/janro/Desktop/FDI/'
 
 setwd(path)
 set.seed(12345)
