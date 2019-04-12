@@ -8,6 +8,7 @@ closeAllConnections()
 library(rjson)
 library(data.table)
 
+######################################################################################
 # Defining all functions necessary to scrap the data
 
 
@@ -243,6 +244,7 @@ main_scrapper <- function(main_vector, from, to){
   return(main_data)
 }
 
+######################################################################################
 # Scrapping the data
 
 

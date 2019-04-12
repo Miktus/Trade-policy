@@ -118,7 +118,7 @@ to trade flows estimation}
   Paris School of Economics\\
   }
 
-\date{March 2019}
+\date{April 2019}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{corollary}{Corollary}[theorem]
@@ -381,13 +381,12 @@ At this stage all the elements of model architecture are defined, allowing to im
 
 \chapter{Results}
 
-Below the results of estimation Poisson Pseudo Maximum Likelihood model are presented.  The model accounts for fixed effects of partner-countries  and separately for year fixed effects but due to large number of dummies representing these factors the estimation results in the table below do not contain them but they are available upon request. What is more, although the presented above set of explanatory variables is much wider, most of them is rejected in the final model due to collinearities. 
-
+Below the results of Poisson Pseudo Maximum Likelihood estimation are presented.  The model accounts for both fixed effects of partner-countries and for year fixed effects, whose estimates are available upon request. What is more, it has to be underlined that although the set of explanatory variables presented in the previous sections is much wider, most of them are rejected in the final model due to collinearity issues.
 
 \begin{table}[H]
 \centering
 \caption{Results of Poisson Pseudo-Maximum Likelihood estimation}
-\begin{tabular}{ccccc}
+\begin{tabular}{lcccc}
   \hline
  & Estimate & Std. Error & t value & Pr($>$$|$t$|$) \\ 
   \hline
@@ -397,25 +396,23 @@ Intercept & 54.8905 & 20.4869 & 2.68 & 0.0074 \\
   gatt\_d & 0.5378 & 0.0527 & 10.20 & 0.0000 \\  
   legnew\_d\_so & 1.3770 & 2.7106 & 0.51 & 0.6115 \\ 
    \hline
-& & & Degrees of Freedom: & \\
-& & & & 3148 Total \\
-& & & & 2947 Residual \\
-& & & Null Deviance:	  &  1.211e+13 \\
-& & & Residual Deviance: & 2.351e+11 	\\
+Total degrees of freedom: & 3148 &&& \\
+Residual degrees of freedom: & 2947 &&& \\
+Null Deviance:	  &  1.211e+13 & & & \\
+Residual Deviance: & 2.351e+11 & & & 	\\
 \hline
 \end{tabular}
-\caption*{\tiny{CHUJ, kody odswiezyc}}
+\caption*{\small{The columns stand for the variable name, its estimated coefficient, its standard error, its t-statistic value and finally its p-value.}}
 \end{table}
 
+The results of estimates appear to be consistent with the intuition. The negative coefficient on logarithm of distance confirms the logic of gravity framework, while the affiliation of trading-partners to WTO or GATT tends to positively affect the trade flow with Poland, which in fact is a member of both organizations itself.
+Moreover, the outcomes for coefficients on variables representing the measure of common religion between countries and dummy for its trade-partner acquiring socialist legal system after transformation also stay in line with the historical background of Poland. It is worth mentioning that  as a former socialist country, it maintained strong connections with its trading partners from period before transformation. However, due to length of the analyzed period and other political decisions, the aforementioned direction was in decline, especially in $21^{st}$ century. Therefore, the attempt to capture the influence over the whole period did not result in significant estimate. 
 
-The results of estimates appear to be consistent with the intuition. The negative coefficient on logarithm of distance confirms the logic of gravity models while the affiliation of trading-partners to WTO or GATT tends to positively affect the trade flow with Poland which is a member of both organizations itself.
-The results for coefficients on variable representing measure of common religion between countries and dummy for its trade-partner acquiring socialist legal system after transformation also stay in line with the historical background of Poland. It is worth mentioning that  as a former socialist country, it maintained strong connections with their trading partner from period before transformation. However, due to length of the analyzed period and other political decisions this direction was in decline especially in $21^{st}$ century. Therefore, the attempt to capture the influence over the whole period did not result in significant estimate. 
-Lastly, to measure the performance of the model on the tests set (for period 2011-2016) the mean-squared-error statistic is calculated. The results is then divided by the variance of flow trades to make it comparable with the neural network approach which uses standardized values of the variables. The final outcome for MSE over above defined variance amounts to 0.001 and confirms the already highlighted high performance of PPML models in trade flows predictions. This results is used further as  a benchmark for the neural network approach.
+Lastly, to measure the performance of the model on the test set (for period 2011-2016), the mean-squared-error statistic is calculated. The results is then divided by the variance of flow trades to make it comparable with the neural network approach which uses standardized values of the variables. The final outcome for MSE ratio amounts to 0.001 and confirms the previously highlighted high performance of PPML models in trade flows predictions. 
 
+As far as the neural network approach is concerned, the following parameter space is considered during the estimation procedure:\\ 
 
-
-The already described procedure and intuition of neural network approach was defined in chapter 3. Therefore, the following parameter space is considered during the estimation procedure:\\ \\
-params = \{lr: \{0.01, 0.1, 0.5\},
+\textbf{params} = \{lr: \{0.01, 0.1, 0.5\},
         l1: \{0.1995262, 0.1584893, 0.1258925, 0.1000000, 0\},
         l2: \{0.1995262, 0.1584893, 0.1258925, 0.1000000, 0\},
         first\_neuron: \{4, 8, 16, 32\},
@@ -427,8 +424,9 @@ params = \{lr: \{0.01, 0.1, 0.5\},
         losses: \{mse\},
         activation: \{relu, sigmoid\}\} \\
 
-
 As far as the main outcomes from the trade flows prediction through a neural network approach are concerned, the best performing ten models are presented in the following \nameref{Results} Table. 
+
+\newpage
 
 \begin{table}[H] \label{Results}
 \footnotesize{
@@ -460,11 +458,12 @@ N & First  & Hidden & Batch & Epochs & Dropout & Opt & Losses & Activation \\ \m
 9  & 32            & 1              & 32          & 250    & 0,1     & Adam      & MSE    & relu       \\
 10 & 32            & 2              & 32          & 250    & 0       & Adam      & MSE    & relu      \\ \bottomrule
 \end{tabular}
-\caption*{\tiny{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, maximum number of epochs, dropout, optimizer, losses, activation function;}}}
+\caption*{\footnotesize{Where columns denote respectively: \textit{Upper:} position in ranking, number of iterations to converge, loss for validation set, MSE for validation set, loss for test set, MSE for test set, learning rate, L1 penalty, L2 penalty; \textit{Lower:} position in ranking, first layer size, number of hidden layers, batch size, maximum number of epochs, dropout, optimizer, losses, activation function;}}}
 \end{table}
 
-Based on the aforementioned outcomes, the parameters space was restricted to: \\ \\
-params\_final= \{lr: \{0.001\},
+Based on the aforementioned outcomes, the parameters space was restricted to: \\ 
+
+\textbf{params\_final} = \{lr: \{0.001\},
         l1: \{0\},
         l2: \{0\},
         first\_neuron: \{32\},
@@ -476,13 +475,11 @@ params\_final= \{lr: \{0.001\},
         losses: \{mse\},
         activation: \{relu\}\}\\
  
-The best performance was achieved for the model with the batch size equal to 32 and 1 hidden layer. It achieved the convergence after over 86 thousands iteration which is a drastic change in comparison to neural networks estimated at the first stage. This occurs because of two reasons, firstly much lower learning rate was chosen and furthermore due to use of different condition to state convergence. At the first stage it required that loss function on the validation set does not change significantly across 2 iterations while the set of iterations across which loss function does not vary significantly was extended up to 10 thousands (to state the convergence of the model). The performance of neural network model with aforementioned specification resulted in MSE (for standardized values) equal to 0.038 on validation set, while on the test set it obtained ... .
+The best performance was achieved for the model with the batch size equal to 32 and one hidden layer. It achieved the convergence after over 86 thousand iterations which is a drastic change in comparison to neural networks estimated at the first stage. There are two main reasons, firstly much lower learning rate was chosen and furthermore different condition to state convergence has been implemented. At the first stage, there was required that the loss function on the validation set does not change significantly across 2 iterations, while in the next framework the set of iterations across which loss function does not vary significantly was extended up to ten thousand (to state the convergence of the model). The performance of neural network model with aforementioned specification resulted in MSE (for standardized values) equal to 0.038.
 
 \chapter{Concluding remarks} \label{Concluding remarks}
  
-In this work the authors proposed the neural network approach to estimate the trade flows. The model was performed on the example of Poland and was then confronted with the PPML model, which is a workhorse in terms of bilateral trades estimation. Similarly as in  \citet{wohl2018} the level of mean-squared-error was minor and confirmed the high performance of the model simultaneously outperforming neural network approach.  This stays in contradiction to results of just mentioned paper. However, the authors highlight the limited use of neural network in estimation procedure which did not allow to obtain better results. The procedure at the first stage allowed for much lower number of iteration and therefore worse results. The authors argue that the model of neural network accounting for more dense parameter space with low learning rate and high number of epochs (like in the second stage) could return a final model better performing in predictions.  It is worth mentioning that the estimation of each model defined for large number of epochs and small learning rate takes up to 2 hours to estimate and therefore it was beyond capability to estimate huge number of models. The neural networks appear to be powerful but computationally expensive tool also suited to the trade-flows estimation. As presented in this paper further work and extensions of this approach as well as use more powerful computers may result in out-performance of flagship gravity models. 
-
-\textcolor{red}{REMEMBER TO CHANGE CODES}
+In the following paper, the authors proposed the neural network approach to estimate trade flows. The model was verified on the instance of Poland and then confronted with the PPML framework, which can be regarded as a workhorse in terms of bilateral trades estimation. Similarly to \citet{wohl2018}, the level of mean-squared-error was minor and confirmed the high performance of the PPML model, which substantially outperformed the neural network approach, staying in contradiction to the \citet{wohl2018} results. However, the authors highlight the limited use of neural network in estimation process which did not allow to obtain better outcomes. The procedure at the first stage required much lower number of iteration and therefore worse convergence. The authors argue that the model of neural network accounting for more dense parameter space with low learning rate and high number of epochs (like in the second stage) could return a final model better performing in predictions. It is worth mentioning that the estimation of each model defined for large number of epochs and small learning rate takes up to two hours to estimate and therefore it was beyond capability to estimate. The neural networks appear to be powerful but computationally expensive tool suited to the trade-flows estimation.
 
 \newpage
 
@@ -500,7 +497,7 @@ In this work the authors proposed the neural network approach to estimate the tr
 \chapter*{Appendix B} \label{Appendix B}
 \addcontentsline{toc}{chapter}{Appendix B}
 
-\lstinputlisting{Neural_net.py}
+\lstinputlisting{Neural_net_model.py}
 
 \newpage
 
